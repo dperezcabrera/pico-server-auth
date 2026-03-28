@@ -43,7 +43,7 @@ The set of accepted algorithms is controlled by `ServerAuthSettings.supported_wa
 
 ## Is pico-server-auth compatible with pico-client-auth?
 
-Yes. Tokens issued by pico-server-auth are designed to be validated by pico-client-auth. Ensure the `issuer` and `audience` settings match between the two. pico-client-auth fetches the public keys from the `/auth/jwks` endpoint to verify token signatures.
+Yes. Tokens issued by pico-server-auth are designed to be validated by pico-client-auth. Ensure the `issuer` and `audience` settings match between the two. pico-client-auth fetches the public keys from the `/api/v1/auth/jwks` endpoint to verify token signatures.
 
 ## What signing algorithm does pico-server-auth use for JWTs?
 
@@ -51,7 +51,7 @@ RS256 (RSA with SHA-256). A fresh RSA-2048 keypair is generated on each startup.
 
 ## Is password login enabled by default?
 
-No. The `POST /auth/login` endpoint requires `auto_create_admin: true` in `ServerAuthSettings`. When disabled (the default), the endpoint returns `403 Forbidden`.
+No. The `POST /api/v1/auth/login` endpoint requires `auto_create_admin: true` in `ServerAuthSettings`. When disabled (the default), the endpoint returns `403 Forbidden`.
 
 ## Can I use pico-server-auth without pico-boot?
 

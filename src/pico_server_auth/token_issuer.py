@@ -80,7 +80,7 @@ class TokenIssuer:
         """Returns JWKS for pico-client-auth to validate tokens.
 
         When running in the same process, pico-client-auth can fetch
-        this from the /auth/jwks endpoint or directly from this component.
+        this from the /api/v1/auth/jwks endpoint or directly from this component.
         """
         if self._jwk is None:
             pub_numbers = self._public_key.public_numbers()

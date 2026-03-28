@@ -42,8 +42,8 @@ container = init(modules=["__main__"], config=config)  # pico-server-auth auto-d
 app: FastAPI = container.get(FastAPI)
 
 # Now available:
-#   POST /auth/challenge     — wallet login step 1
-#   POST /auth/wallet        — wallet login step 2
-#   POST /auth/login         — password login
-#   GET  /auth/jwks          — JWKS for token validation
+#   POST /api/v1/auth/challenge     — wallet login step 1
+#   POST /api/v1/auth/sign-in        — wallet login step 2
+#   POST /api/v1/auth/login         — password login
+#   GET  /api/v1/auth/jwks          — JWKS for token validation
 #   GET  /api/me             — your endpoint (requires valid JWT)

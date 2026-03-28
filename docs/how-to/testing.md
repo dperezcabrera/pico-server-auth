@@ -37,7 +37,7 @@ def app():
             "auth_client": {
                 "issuer": "http://testserver",
                 "audience": "test",
-                "jwks_url": "http://testserver/auth/jwks",
+                "jwks_url": "http://testserver/api/v1/auth/jwks",
             },
         },
     )
@@ -53,7 +53,7 @@ async def client(app):
 @pytest.mark.asyncio
 async def test_admin_login(client):
     resp = await client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         json={"email": "test@test.com", "password": "test123"},
     )
     assert resp.status_code == 200
@@ -66,7 +66,7 @@ async def test_admin_login(client):
 async def test_protected_endpoint_with_token(client):
     # Login to get a token
     login_resp = await client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         json={"email": "test@test.com", "password": "test123"},
     )
     token = login_resp.json()["access_token"]
@@ -93,7 +93,7 @@ async def test_wallet_auth_ed25519(client):
 
     # 1. Request challenge
     resp = await client.post(
-        "/auth/challenge",
+        "/api/v1/auth/challenge",
         json={"address": address},
     )
     assert resp.status_code == 200
@@ -110,7 +110,7 @@ async def test_wallet_auth_ed25519(client):
 
     # 3. Verify and login
     resp = await client.post(
-        "/auth/wallet",
+        "/api/v1/auth/sign-in",
         json={
             "address": address,
             "public_key": public_key_hex,
@@ -131,12 +131,12 @@ async def test_expired_challenge(client):
     address = "0xTestWallet002"
 
     # Request challenge
-    resp = await client.post("/auth/challenge", json={"address": address})
+    resp = await client.post("/api/v1/auth/challenge", json={"address": address})
     challenge = resp.json()["challenge"]
 
     # Try to use a wrong nonce
     resp = await client.post(
-        "/auth/wallet",
+        "/api/v1/auth/sign-in",
         json={
             "address": address,
             "public_key": "aa" * 32,

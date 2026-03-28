@@ -4,9 +4,9 @@ Wallet authentication uses a challenge/verify flow: the client requests a nonce,
 
 ## Flow Overview
 
-1. **Request challenge** — `POST /auth/challenge` with the wallet address.
+1. **Request challenge** — `POST /api/v1/auth/challenge` with the wallet address.
 2. **Sign challenge** — The client signs the nonce with their private key.
-3. **Verify and login** — `POST /auth/wallet` with address, public key, signature, challenge, and algorithm.
+3. **Verify and login** — `POST /api/v1/auth/sign-in` with address, public key, signature, challenge, and algorithm.
 4. **Receive JWT** — The server returns access and refresh tokens.
 
 ## Step 1: Request a Challenge
@@ -17,7 +17,7 @@ import httpx
 async def request_challenge(base_url: str, address: str) -> dict:
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            f"{base_url}/auth/challenge",
+            f"{base_url}/api/v1/auth/challenge",
             json={"address": address},
         )
         resp.raise_for_status()
@@ -100,7 +100,7 @@ async def wallet_login(base_url: str, address: str, public_key_hex: str,
                        signature_hex: str, challenge: str, algorithm: str) -> dict:
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            f"{base_url}/auth/wallet",
+            f"{base_url}/api/v1/auth/sign-in",
             json={
                 "address": address,
                 "public_key": public_key_hex,
@@ -146,7 +146,7 @@ async def authenticate():
     async with httpx.AsyncClient() as client:
         # 2. Request challenge
         resp = await client.post(
-            f"{BASE_URL}/auth/challenge",
+            f"{BASE_URL}/api/v1/auth/challenge",
             json={"address": ADDRESS},
         )
         challenge = resp.json()["challenge"]
@@ -157,7 +157,7 @@ async def authenticate():
 
         # 4. Submit for verification
         resp = await client.post(
-            f"{BASE_URL}/auth/wallet",
+            f"{BASE_URL}/api/v1/auth/sign-in",
             json={
                 "address": ADDRESS,
                 "public_key": public_key.public_bytes_raw().hex(),

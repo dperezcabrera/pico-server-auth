@@ -4,7 +4,7 @@ All endpoints are served by `AuthController` under the `/auth` prefix with tag `
 
 ---
 
-## GET /auth/jwks
+## GET /api/v1/auth/jwks
 
 Returns the JWKS (JSON Web Key Set) containing the public key used to sign JWTs.
 
@@ -29,7 +29,7 @@ Returns the JWKS (JSON Web Key Set) containing the public key used to sign JWTs.
 
 ---
 
-## POST /auth/challenge
+## POST /api/v1/auth/challenge
 
 Request a challenge nonce for wallet authentication.
 
@@ -69,7 +69,7 @@ Request a challenge nonce for wallet authentication.
 
 ---
 
-## POST /auth/wallet
+## POST /api/v1/auth/sign-in
 
 Verify a wallet signature and issue JWT tokens.
 
@@ -92,7 +92,7 @@ Verify a wallet signature and issue JWT tokens.
 | `address` | `string` | Yes | — | Wallet address |
 | `public_key` | `string` | Yes | — | Hex-encoded public key |
 | `signature` | `string` | Yes | — | Hex-encoded signature of the challenge nonce |
-| `challenge` | `string` | Yes | — | The nonce from `/auth/challenge` |
+| `challenge` | `string` | Yes | — | The nonce from `/api/v1/auth/challenge` |
 | `algorithm` | `string` | No | `"ML-DSA-65"` | Signature algorithm: `"ML-DSA-65"`, `"Ed25519"`, or `"secp256k1"` |
 
 **Response:** `200 OK`
@@ -139,7 +139,7 @@ Verify a wallet signature and issue JWT tokens.
 
 ---
 
-## POST /auth/login
+## POST /api/v1/auth/login
 
 Password-based login for admin bootstrap.
 

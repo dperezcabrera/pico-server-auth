@@ -20,7 +20,7 @@ Simple email/password login for admin bootstrap. Disabled by default — enable 
 
 ### JWKS (JSON Web Key Set)
 
-The `/auth/jwks` endpoint exposes the public key set used to sign JWTs. pico-client-auth fetches this endpoint to validate tokens, whether running in the same process or remotely.
+The `/api/v1/auth/jwks` endpoint exposes the public key set used to sign JWTs. pico-client-auth fetches this endpoint to validate tokens, whether running in the same process or remotely.
 
 [JWKS Guide](jwks.md){ .md-button }
 
@@ -28,6 +28,6 @@ The `/auth/jwks` endpoint exposes the public key set used to sign JWTs. pico-cli
 
 | Mode | Use Case | Endpoint |
 |---|---|---|
-| Wallet | Decentralized identity, Web3, post-quantum auth | `POST /auth/challenge` + `POST /auth/wallet` |
-| Password | Admin bootstrap, development | `POST /auth/login` |
-| JWKS | Token validation by pico-client-auth | `GET /auth/jwks` |
+| Wallet | Decentralized identity, Web3, post-quantum auth | `POST /api/v1/auth/challenge` + `POST /api/v1/auth/sign-in` |
+| Password | Admin bootstrap, development | `POST /api/v1/auth/login` |
+| JWKS | Token validation by pico-client-auth | `GET /api/v1/auth/jwks` |

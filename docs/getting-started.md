@@ -50,7 +50,7 @@ app = Application(
         "auth_client": {
             "issuer": "http://localhost:8100",
             "audience": "my-app",
-            "jwks_url": "http://localhost:8100/auth/jwks",
+            "jwks_url": "http://localhost:8100/api/v1/auth/jwks",
         },
     },
 )
@@ -89,7 +89,7 @@ config = {
     "auth_client": {
         "issuer": "https://auth.example.com",
         "audience": "my-platform",
-        "jwks_url": "https://auth.example.com/auth/jwks",
+        "jwks_url": "https://auth.example.com/api/v1/auth/jwks",
     },
 }
 ```

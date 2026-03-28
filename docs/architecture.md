@@ -19,16 +19,16 @@ graph TB
     WV --> SAS
     CS --> SAS
 
-    Client([Client / Wallet]) -->|POST /auth/challenge| AC
-    Client -->|POST /auth/wallet| AC
-    Client -->|POST /auth/login| AC
+    Client([Client / Wallet]) -->|POST /api/v1/auth/challenge| AC
+    Client -->|POST /api/v1/auth/sign-in| AC
+    Client -->|POST /api/v1/auth/login| AC
 
     subgraph "pico-client-auth"
         TV[TokenValidator]
         JC[JWKSClient]
     end
 
-    JC -->|GET /auth/jwks| AC
+    JC -->|GET /api/v1/auth/jwks| AC
     TV --> JC
 ```
 
@@ -46,7 +46,7 @@ graph LR
         APP[Your Controllers]
     end
 
-    SA -->|JWKS via /auth/jwks| CA
+    SA -->|JWKS via /api/v1/auth/jwks| CA
     CA -->|SecurityContext| APP
 ```
 
@@ -77,13 +77,13 @@ sequenceDiagram
     participant WV as WalletVerifier
     participant TI as TokenIssuer
 
-    W->>A: POST /auth/challenge {"address": "0x..."}
+    W->>A: POST /api/v1/auth/challenge {"address": "0x..."}
     A->>CS: create(address) -> nonce
     A-->>W: {"challenge": "<nonce>", "ttl": 60}
 
     Note over W: Sign nonce with private key
 
-    W->>A: POST /auth/wallet {"address", "public_key", "signature", "challenge", "algorithm"}
+    W->>A: POST /api/v1/auth/sign-in {"address", "public_key", "signature", "challenge", "algorithm"}
     A->>CS: validate(address, nonce)
     CS-->>A: true (nonce consumed)
     A->>WV: verify(algorithm, public_key, message, signature)

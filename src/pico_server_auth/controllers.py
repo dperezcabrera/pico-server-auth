@@ -10,7 +10,7 @@ from pico_server_auth.token_issuer import TokenIssuer
 from pico_server_auth.wallet_verifier import WalletVerifier
 
 
-@controller(prefix="/auth", tags=["Auth"])
+@controller(prefix="/api/v1/auth", tags=["Auth"])
 class AuthController:
     """Auth endpoints — compatible with pico-client-auth validation.
 
@@ -54,8 +54,8 @@ class AuthController:
         }
 
     @allow_anonymous
-    @post("/wallet")
-    async def wallet_login(self, body: dict[str, Any]):
+    @post("/sign-in")
+    async def sign_in(self, body: dict[str, Any]):
         """Verify wallet signature and issue JWT.
 
         Body: {

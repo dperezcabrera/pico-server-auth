@@ -1,11 +1,11 @@
 # JWKS Endpoint
 
-The JWKS (JSON Web Key Set) endpoint at `GET /auth/jwks` exposes the public keys used by `TokenIssuer` to sign JWTs. This is the bridge between pico-server-auth (token issuer) and pico-client-auth (token validator).
+The JWKS (JSON Web Key Set) endpoint at `GET /api/v1/auth/jwks` exposes the public keys used by `TokenIssuer` to sign JWTs. This is the bridge between pico-server-auth (token issuer) and pico-client-auth (token validator).
 
 ## How It Works
 
 1. `TokenIssuer` generates an RSA-2048 keypair on startup.
-2. The public key is served as a JWKS at `/auth/jwks`.
+2. The public key is served as a JWKS at `/api/v1/auth/jwks`.
 3. pico-client-auth's `JWKSClient` fetches this endpoint to obtain the public key.
 4. Incoming JWTs are validated using the fetched public key.
 
@@ -33,7 +33,7 @@ import httpx
 
 async def fetch_jwks(base_url: str) -> dict:
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{base_url}/auth/jwks")
+        resp = await client.get(f"{base_url}/api/v1/auth/jwks")
         resp.raise_for_status()
         return resp.json()
 ```
@@ -49,7 +49,7 @@ config = {
     "auth_client": {
         "issuer": "http://localhost:8100",
         "audience": "my-app",
-        "jwks_url": "http://localhost:8100/auth/jwks",
+        "jwks_url": "http://localhost:8100/api/v1/auth/jwks",
     },
 }
 ```
@@ -61,7 +61,7 @@ config = {
     "auth_client": {
         "issuer": "https://auth.example.com",
         "audience": "my-platform",
-        "jwks_url": "https://auth.example.com/auth/jwks",
+        "jwks_url": "https://auth.example.com/api/v1/auth/jwks",
     },
 }
 ```

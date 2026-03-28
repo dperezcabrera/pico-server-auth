@@ -27,7 +27,7 @@ app = Application(
         "auth_client": {
             "issuer": "http://localhost:8100",
             "audience": "my-app",
-            "jwks_url": "http://localhost:8100/auth/jwks",
+            "jwks_url": "http://localhost:8100/api/v1/auth/jwks",
         },
     },
 )
@@ -80,10 +80,10 @@ config = {
 
 | Endpoint | Source | Auth Required |
 |---|---|---|
-| `GET /auth/jwks` | pico-server-auth | No |
-| `POST /auth/challenge` | pico-server-auth | No |
-| `POST /auth/wallet` | pico-server-auth | No |
-| `POST /auth/login` | pico-server-auth | No |
+| `GET /api/v1/auth/jwks` | pico-server-auth | No |
+| `POST /api/v1/auth/challenge` | pico-server-auth | No |
+| `POST /api/v1/auth/sign-in` | pico-server-auth | No |
+| `POST /api/v1/auth/login` | pico-server-auth | No |
 | `GET /api/admin/dashboard` | Your app | Yes (admin role) |
 | `GET /api/profile` | Your app | Yes (any authenticated) |
 

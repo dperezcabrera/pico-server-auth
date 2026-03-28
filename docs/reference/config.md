@@ -33,7 +33,7 @@ class ServerAuthSettings:
 | `access_token_expire_minutes` | `int` | `15` | Access token lifetime in minutes. |
 | `refresh_token_expire_days` | `int` | `7` | Refresh token lifetime in days. |
 | `challenge_ttl_seconds` | `int` | `60` | How long a wallet challenge nonce remains valid. |
-| `auto_create_admin` | `bool` | `False` | Enable the `POST /auth/login` password endpoint. |
+| `auto_create_admin` | `bool` | `False` | Enable the `POST /api/v1/auth/login` password endpoint. |
 | `admin_email` | `str` | `"admin@pico.local"` | Email for admin password login. |
 | `admin_password` | `str` | `"admin"` | Password for admin password login. |
 | `supported_wallet_algorithms` | `list[str]` | `["ML-DSA-65", "Ed25519", "secp256k1"]` | Algorithms accepted by `WalletVerifier`. |

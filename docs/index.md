@@ -34,7 +34,7 @@ app = Application(
         "auth_client": {
             "issuer": "http://localhost:8100",
             "audience": "my-app",
-            "jwks_url": "http://localhost:8100/auth/jwks",
+            "jwks_url": "http://localhost:8100/api/v1/auth/jwks",
         },
     },
 )
@@ -46,10 +46,10 @@ This gives you:
 
 | Endpoint | Description |
 |---|---|
-| `POST /auth/challenge` | Request a challenge nonce for wallet auth |
-| `POST /auth/wallet` | Verify wallet signature and receive JWT |
-| `POST /auth/login` | Password login (admin bootstrap) |
-| `GET /auth/jwks` | JWKS public keys for token validation |
+| `POST /api/v1/auth/challenge` | Request a challenge nonce for wallet auth |
+| `POST /api/v1/auth/sign-in` | Verify wallet signature and receive JWT |
+| `POST /api/v1/auth/login` | Password login (admin bootstrap) |
+| `GET /api/v1/auth/jwks` | JWKS public keys for token validation |
 
 ## Supported Wallet Algorithms
 

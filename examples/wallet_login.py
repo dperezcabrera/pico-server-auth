@@ -18,7 +18,7 @@ def main():
 
     with httpx.Client() as client:
         # 1. Request challenge
-        r = client.post(f"{BASE}/auth/challenge", json={"address": address})
+        r = client.post(f"{BASE}/api/v1/auth/challenge", json={"address": address})
         r.raise_for_status()
         nonce = r.json()["challenge"]
         print(f"Challenge: {nonce[:16]}...")
@@ -28,7 +28,7 @@ def main():
 
         # 3. Verify and get JWT
         r = client.post(
-            f"{BASE}/auth/wallet",
+            f"{BASE}/api/v1/auth/sign-in",
             json={
                 "address": address,
                 "public_key": pk.public_bytes_raw().hex(),
@@ -44,7 +44,7 @@ def main():
 
         # 4. Use the token
         r = client.get(
-            f"{BASE}/auth/jwks",
+            f"{BASE}/api/v1/auth/jwks",
             headers={"Authorization": f"Bearer {token['access_token']}"},
         )
         print(f"JWKS: {r.status_code}")

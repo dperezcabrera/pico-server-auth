@@ -40,7 +40,7 @@ def client(app):
 
 
 def test_jwks_returns_keys(client):
-    r = client.get("/auth/jwks")
+    r = client.get("/api/v1/auth/jwks")
     assert r.status_code == 200
     data = r.json()
     assert "keys" in data
@@ -54,7 +54,7 @@ def test_jwks_returns_keys(client):
 
 
 def test_challenge_returns_nonce(client):
-    r = client.post("/auth/challenge", json={"address": "0xabc"})
+    r = client.post("/api/v1/auth/challenge", json={"address": "0xabc"})
     assert r.status_code == 200
     data = r.json()
     assert "challenge" in data
@@ -63,7 +63,7 @@ def test_challenge_returns_nonce(client):
 
 
 def test_challenge_requires_address(client):
-    r = client.post("/auth/challenge", json={})
+    r = client.post("/api/v1/auth/challenge", json={})
     assert r.status_code == 400
 
 
@@ -72,7 +72,7 @@ def test_challenge_requires_address(client):
 
 def test_wallet_login_ed25519(client):
     # Get challenge
-    r = client.post("/auth/challenge", json={"address": "0xed25519"})
+    r = client.post("/api/v1/auth/challenge", json={"address": "0xed25519"})
     nonce = r.json()["challenge"]
 
     # Sign
@@ -81,7 +81,7 @@ def test_wallet_login_ed25519(client):
     signature = sk.sign(nonce.encode("utf-8"))
 
     r = client.post(
-        "/auth/wallet",
+        "/api/v1/auth/sign-in",
         json={
             "address": "0xed25519",
             "public_key": pk.public_bytes_raw().hex(),
@@ -104,7 +104,7 @@ def test_wallet_login_invalid_challenge(client):
     signature = sk.sign(b"wrong")
 
     r = client.post(
-        "/auth/wallet",
+        "/api/v1/auth/sign-in",
         json={
             "address": "0xbad",
             "public_key": pk.public_bytes_raw().hex(),
@@ -117,7 +117,7 @@ def test_wallet_login_invalid_challenge(client):
 
 
 def test_wallet_login_invalid_signature(client):
-    r = client.post("/auth/challenge", json={"address": "0xbadsig"})
+    r = client.post("/api/v1/auth/challenge", json={"address": "0xbadsig"})
     nonce = r.json()["challenge"]
 
     sk = Ed25519PrivateKey.generate()
@@ -126,7 +126,7 @@ def test_wallet_login_invalid_signature(client):
     signature = sk.sign(b"wrong message")
 
     r = client.post(
-        "/auth/wallet",
+        "/api/v1/auth/sign-in",
         json={
             "address": "0xbadsig",
             "public_key": pk.public_bytes_raw().hex(),
@@ -139,7 +139,7 @@ def test_wallet_login_invalid_signature(client):
 
 
 def test_wallet_login_missing_fields(client):
-    r = client.post("/auth/wallet", json={"address": "0x"})
+    r = client.post("/api/v1/auth/sign-in", json={"address": "0x"})
     assert r.status_code == 400
 
 
@@ -147,7 +147,7 @@ def test_wallet_login_missing_fields(client):
 
 
 def test_password_login_success(client):
-    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "secret"})
+    r = client.post("/api/v1/auth/login", json={"email": "admin@test.com", "password": "secret"})
     assert r.status_code == 200
     data = r.json()
     assert "access_token" in data
@@ -155,12 +155,12 @@ def test_password_login_success(client):
 
 
 def test_password_login_wrong_password(client):
-    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "wrong"})
+    r = client.post("/api/v1/auth/login", json={"email": "admin@test.com", "password": "wrong"})
     assert r.status_code == 401
 
 
 def test_password_login_wrong_email(client):
-    r = client.post("/auth/login", json={"email": "nobody@test.com", "password": "secret"})
+    r = client.post("/api/v1/auth/login", json={"email": "nobody@test.com", "password": "secret"})
     assert r.status_code == 401
 
 
@@ -168,10 +168,10 @@ def test_password_login_wrong_email(client):
 
 
 def test_issued_token_is_valid_jwt(client):
-    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "secret"})
+    r = client.post("/api/v1/auth/login", json={"email": "admin@test.com", "password": "secret"})
     token = r.json()["access_token"]
 
-    jwks = client.get("/auth/jwks").json()
+    jwks = client.get("/api/v1/auth/jwks").json()
     key = jwks["keys"][0]
 
     from jose import jwt
@@ -182,7 +182,7 @@ def test_issued_token_is_valid_jwt(client):
 
 
 def test_wallet_token_has_wallet_claims(client):
-    r = client.post("/auth/challenge", json={"address": "0xclaims"})
+    r = client.post("/api/v1/auth/challenge", json={"address": "0xclaims"})
     nonce = r.json()["challenge"]
 
     sk = Ed25519PrivateKey.generate()
@@ -190,7 +190,7 @@ def test_wallet_token_has_wallet_claims(client):
     signature = sk.sign(nonce.encode("utf-8"))
 
     r = client.post(
-        "/auth/wallet",
+        "/api/v1/auth/sign-in",
         json={
             "address": "0xclaims",
             "public_key": pk.public_bytes_raw().hex(),
@@ -201,7 +201,7 @@ def test_wallet_token_has_wallet_claims(client):
     )
     token = r.json()["access_token"]
 
-    jwks = client.get("/auth/jwks").json()
+    jwks = client.get("/api/v1/auth/jwks").json()
     key = jwks["keys"][0]
 
     from jose import jwt

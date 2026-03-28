@@ -39,7 +39,7 @@ api_app = Application(
         "auth_client": {
             "issuer": "https://auth.example.com",
             "audience": "my-platform",
-            "jwks_url": "https://auth.example.com/auth/jwks",
+            "jwks_url": "https://auth.example.com/api/v1/auth/jwks",
         },
     },
 )
@@ -51,7 +51,7 @@ api_app.run()
 
 ```mermaid
 graph LR
-    Client([Client]) -->|POST /auth/wallet| AuthService
+    Client([Client]) -->|POST /api/v1/auth/sign-in| AuthService
     Client -->|GET /api/data + Bearer token| APIService
 
     subgraph AuthService["Auth Service (port 8100)"]
@@ -63,7 +63,7 @@ graph LR
         API[Your Controllers]
     end
 
-    CA -->|GET /auth/jwks| SA
+    CA -->|GET /api/v1/auth/jwks| SA
 ```
 
 ## Multi-Instance Considerations
@@ -81,5 +81,5 @@ When running multiple instances of the auth service:
 The JWKS endpoint can double as a health check since it requires the `TokenIssuer` to be initialized:
 
 ```bash
-curl -f http://localhost:8100/auth/jwks
+curl -f http://localhost:8100/api/v1/auth/jwks
 ```

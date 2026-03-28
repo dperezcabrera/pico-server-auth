@@ -30,7 +30,7 @@ container = init(modules=["myapp"], config=config)
 ```python
 container = init(modules=[], config=config)
 app = container.get(FastAPI)
-# Other services point pico-client-auth to this service's /auth/jwks
+# Other services point pico-client-auth to this service's /api/v1/auth/jwks
 ```
 
 Scaffold a new project with [pico-initializer](https://dperezcabrera.github.io/pico-initializer/) — select **pico-server-auth** in the modules list.
@@ -38,10 +38,10 @@ Scaffold a new project with [pico-initializer](https://dperezcabrera.github.io/p
 ## Endpoints
 
 ```
-GET  /auth/jwks           JWKS public keys (pico-client-auth fetches this)
-POST /auth/challenge      Request nonce for wallet login
-POST /auth/wallet         Verify wallet signature, issue JWT
-POST /auth/login          Password login (admin bootstrap)
+GET  /api/v1/auth/jwks           JWKS public keys (pico-client-auth fetches this)
+POST /api/v1/auth/challenge      Request nonce for wallet login
+POST /api/v1/auth/sign-in         Verify wallet signature, issue JWT
+POST /api/v1/auth/login          Password login (admin bootstrap)
 ```
 
 ## Wallet login flow
@@ -49,7 +49,7 @@ POST /auth/login          Password login (admin bootstrap)
 ```
 Client                    pico-server-auth
   │                            │
-  │ POST /auth/challenge       │
+  │ POST /api/v1/auth/challenge       │
   │ { address: "0x..." }       │
   │───────────────────────────>│
   │ { challenge: "<nonce>" }   │
@@ -57,7 +57,7 @@ Client                    pico-server-auth
   │                            │
   │ sign(nonce) with wallet    │
   │                            │
-  │ POST /auth/wallet          │
+  │ POST /api/v1/auth/sign-in          │
   │ { address, public_key,     │
   │   signature, challenge,    │
   │   algorithm: "ML-DSA-65" } │
@@ -76,7 +76,7 @@ Client                    pico-server-auth
 
 ## Compatibility with pico-client-auth
 
-Tokens issued by pico-server-auth are standard JWT (RS256). pico-client-auth validates them by fetching JWKS from the `/auth/jwks` endpoint.
+Tokens issued by pico-server-auth are standard JWT (RS256). pico-client-auth validates them by fetching JWKS from the `/api/v1/auth/jwks` endpoint.
 
 **Same process**: pico-client-auth discovers the JWKS endpoint automatically (same FastAPI app).
 
@@ -86,7 +86,7 @@ Tokens issued by pico-server-auth are standard JWT (RS256). pico-client-auth val
 auth_client:
   issuer: "http://auth-server:8100"
   audience: "pico"
-  # JWKS fetched from http://auth-server:8100/auth/jwks
+  # JWKS fetched from http://auth-server:8100/api/v1/auth/jwks
 ```
 
 ## Challenge store

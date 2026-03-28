@@ -34,7 +34,7 @@ import httpx
 async def admin_login(base_url: str, email: str, password: str) -> dict:
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            f"{base_url}/auth/login",
+            f"{base_url}/api/v1/auth/login",
             json={"email": email, "password": password},
         )
         resp.raise_for_status()
