@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=69.0", "wheel", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pico-server-auth"
+description = "Embeddable auth server module for the pico ecosystem — JWT issuance, wallet login, JWKS endpoint"
+requires-python = ">=3.11"
+dynamic = ["version"]
+dependencies = [
+    "pico-ioc[yaml]>=2.2.0",
+    "pico-boot>=0.1.0",
+    "pico-fastapi>=0.1.0",
+    "python-jose[cryptography]>=3.3.0",
+    "cryptography>=42.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.9.0",
+]
+
+[project.entry-points."pico_boot.modules"]
+pico_server_auth = "pico_server_auth"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
