@@ -8,9 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - 2026-03-28
 
 ### Changed
-- Endpoints moved to `/api/v1/auth/` prefix for ecosystem consistency.
-- Wallet login renamed from `/auth/wallet` to `/api/v1/auth/sign-in`.
-- Removed blockchain-specific naming from docs.
+- Standardized API routes under `/api/v1/auth/` prefix.
+- Renamed sign-in endpoint for consistency.
+- Docs reference algorithms only, no chain-specific naming.
 
 ### Fixed
 - CI coverage merge with tox path normalization in `.coveragerc`.
