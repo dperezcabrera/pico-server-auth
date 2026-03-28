@@ -18,21 +18,22 @@ Issues JWT tokens, handles wallet challenge-response login, and exposes JWKS —
 
 ## Two deployment modes
 
-**Embedded** — add to any pico-boot app, auth runs in the same process:
+**Embedded** — add to any [pico-boot](https://github.com/dperezcabrera/pico-boot) app, auth runs in the same process. Auto-discovered — no need to list it in `modules=[]`:
 
 ```python
-container = init(modules=["myapp", "pico_server_auth"], config=config)
-# /auth/jwks, /auth/challenge, /auth/wallet, /auth/login — all available
-# pico-client-auth validates tokens from the same JWKS
+container = init(modules=["myapp"], config=config)
+# pico-server-auth endpoints are available automatically
 ```
 
-**Standalone** — deploy as a separate auth service (like pico-auth):
+**Standalone** — deploy as a separate auth service:
 
 ```python
-container = init(modules=["pico_server_auth"], config=config)
+container = init(modules=[], config=config)
 app = container.get(FastAPI)
-# Other services point pico-client-auth JWKS to this service's /auth/jwks
+# Other services point pico-client-auth to this service's /auth/jwks
 ```
+
+Scaffold a new project with [pico-initializer](https://dperezcabrera.github.io/pico-initializer/) — select **pico-server-auth** in the modules list.
 
 ## Endpoints
 

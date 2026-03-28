@@ -38,7 +38,7 @@ config = configuration(
     })
 )
 
-container = init(modules=["pico_server_auth", "__main__"], config=config)
+container = init(modules=["__main__"], config=config)  # pico-server-auth auto-discovered
 app: FastAPI = container.get(FastAPI)
 
 # Now available:

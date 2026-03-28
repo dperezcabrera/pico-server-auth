@@ -30,7 +30,7 @@ Install `cryptography>=44.0` when FIPS 204 ML-DSA support is available, or provi
 
 If pico-client-auth can't validate tokens:
 
-**Same process**: ensure both `pico_server_auth` and `pico_client_auth` are in the modules list, and `auth_client.issuer` matches `server_auth.issuer`.
+**Same process**: ensure both are installed (auto-discovered by pico-boot), and `auth_client.issuer` matches `server_auth.issuer`.
 
 **Separate processes**: ensure `auth_client.jwks_endpoint` or `auth_client.issuer` points to the service running pico-server-auth.
 
