@@ -1,7 +1,16 @@
 [run]
 branch = True
-source = pico_server_auth
-omit = */_version.py
+source =
+    pico_server_auth
+omit =
+    */_version.py
+
+[paths]
+pico_server_auth =
+    src/pico_server_auth
+    .tox/*/lib/*/site-packages/pico_server_auth
+    .tox/*/site-packages/pico_server_auth
+    */site-packages/pico_server_auth
 
 [report]
 show_missing = True
