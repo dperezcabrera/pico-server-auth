@@ -1,5 +1,17 @@
 # pico-server-auth
 
+[![PyPI](https://img.shields.io/pypi/v/pico-server-auth.svg)](https://pypi.org/project/pico-server-auth/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/dperezcabrera/pico-server-auth)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+![CI](https://github.com/dperezcabrera/pico-server-auth/actions/workflows/ci.yml/badge.svg)
+[![codecov](https://codecov.io/gh/dperezcabrera/pico-server-auth/branch/main/graph/badge.svg)](https://codecov.io/gh/dperezcabrera/pico-server-auth)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dperezcabrera_pico-server-auth&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=dperezcabrera_pico-server-auth)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=dperezcabrera_pico-server-auth&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=dperezcabrera_pico-server-auth)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=dperezcabrera_pico-server-auth&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=dperezcabrera_pico-server-auth)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/pico-server-auth?period=monthly&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=Monthly+downloads)](https://pepy.tech/projects/pico-server-auth)
+[![Docs](https://img.shields.io/badge/Docs-pico--server--auth-blue?style=flat&logo=readthedocs&logoColor=white)](https://dperezcabrera.github.io/pico-server-auth/)
+[![Interactive Lab](https://img.shields.io/badge/Learn-online-green?style=flat&logo=python&logoColor=white)](https://dperezcabrera.github.io/pico-learn/)
+
 Embeddable auth server module for the [pico-boot](https://github.com/dperezcabrera/pico-boot) ecosystem.
 
 Issues JWT tokens, handles wallet challenge-response login, and exposes JWKS — all compatible with [pico-client-auth](https://github.com/dperezcabrera/pico-client-auth) validation.

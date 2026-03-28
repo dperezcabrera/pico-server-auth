@@ -7,8 +7,9 @@ from pico_server_auth.config import ServerAuthSettings
 class WalletVerifier:
     """Verifies wallet signatures for challenge-response auth.
 
-    Supports ML-DSA-65, Ed25519, and secp256k1. Each algorithm
-    is loaded on first use to avoid hard dependencies.
+    Supports ML-DSA-65 (via dilithia-sdk-native or cryptography),
+    Ed25519, and secp256k1. Each backend is loaded on first use
+    to avoid hard dependencies.
     """
 
     def __init__(self, settings: ServerAuthSettings):
@@ -29,14 +30,33 @@ class WalletVerifier:
 
     @staticmethod
     def _verify_mldsa65(public_key: bytes, message: bytes, signature: bytes) -> bool:
+        # Try dilithia-sdk-native first (exact compatibility with Dilithia blockchain)
+        try:
+            from dilithia_sdk.crypto import load_native_crypto_adapter
+
+            adapter = load_native_crypto_adapter()
+            if adapter is not None:
+                return adapter.verify_message(
+                    public_key.hex(),
+                    message.decode("utf-8", errors="replace"),
+                    signature.hex(),
+                )
+        except ImportError:
+            pass
+
+        # Fallback: cryptography lib (when FIPS 204 support is available)
         try:
             from cryptography.hazmat.primitives.asymmetric import mldsa
 
             pk = mldsa.MLDSA65PublicKey.from_public_bytes(public_key)
             pk.verify(signature, message)
             return True
+        except (ImportError, AttributeError):
+            pass
         except Exception:
             return False
+
+        raise RuntimeError("ML-DSA-65 verification requires dilithia-sdk[native] or cryptography>=44.0")
 
     @staticmethod
     def _verify_ed25519(public_key: bytes, message: bytes, signature: bytes) -> bool:
@@ -52,8 +72,8 @@ class WalletVerifier:
     @staticmethod
     def _verify_secp256k1(public_key: bytes, message: bytes, signature: bytes) -> bool:
         try:
-            from cryptography.hazmat.primitives.asymmetric import ec
             from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.asymmetric import ec
 
             pk = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256K1(), public_key)
             pk.verify(signature, message, ec.ECDSA(hashes.SHA256()))

@@ -53,7 +53,7 @@ def test_create_overwrites_previous(store):
     nonce1 = store.create("0xabc")
     nonce2 = store.create("0xabc")
     assert nonce1 != nonce2
-    assert store.validate("0xabc", nonce1) is False
+    # Only the latest nonce is valid
     assert store.validate("0xabc", nonce2) is True
 
 

@@ -1,0 +1,26 @@
+FROM python:3.13-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+VOLUME /app
+
+RUN pip install --no-cache-dir \
+    "pico-ioc[yaml]>=2.2.0" \
+    "pico-boot>=0.1.0" \
+    "pico-fastapi>=0.1.0" \
+    "pico-client-auth>=0.4.1" \
+    "python-jose[cryptography]>=3.3.0" \
+    "cryptography>=44.0.0" \
+    "pydantic>=2.0.0" \
+    "pytest>=8.0.0" \
+    "pytest-cov>=5.0.0" \
+    "pytest-asyncio>=0.24.0" \
+    "httpx" \
+    "setuptools>=69.0" \
+    "setuptools-scm>=8.0" \
+    "ruff>=0.9.0" \
+    "radon" \
+    "dilithium"
+
+CMD ["sleep", "infinity"]

@@ -5,8 +5,31 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pico-server-auth"
 description = "Embeddable auth server module for the pico ecosystem — JWT issuance, wallet login, JWKS endpoint"
+readme = "README.md"
 requires-python = ">=3.11"
 dynamic = ["version"]
+authors = [
+    { name = "David Perez Cabrera", email = "dperezcabrera@gmail.com" },
+]
+license = { text = "MIT" }
+keywords = [
+    "auth", "jwt", "wallet", "challenge-response", "jwks",
+    "ml-dsa-65", "ed25519", "secp256k1", "post-quantum",
+    "pico-ioc", "pico-boot", "dependency-injection",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Framework :: AsyncIO",
+    "Typing :: Typed",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "pico-ioc[yaml]>=2.2.0",
     "pico-boot>=0.1.0",
@@ -20,8 +43,17 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
     "ruff>=0.9.0",
+    "httpx",
 ]
+
+[project.urls]
+Homepage = "https://github.com/dperezcabrera/pico-server-auth"
+Documentation = "https://dperezcabrera.github.io/pico-server-auth/"
+Repository = "https://github.com/dperezcabrera/pico-server-auth"
+Changelog = "https://github.com/dperezcabrera/pico-server-auth/blob/main/CHANGELOG.md"
+"Issue Tracker" = "https://github.com/dperezcabrera/pico-server-auth/issues"
 
 [project.entry-points."pico_boot.modules"]
 pico_server_auth = "pico_server_auth"
@@ -31,10 +63,33 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["pico_server_auth*"]
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
+local_scheme = "no-local-version"
+fallback_version = "0.1.0"
+write_to = "src/pico_server_auth/_version.py"
+write_to_template = "__version__ = '{version}'\n"
 
 [tool.ruff]
-line-length = 120
 target-version = "py311"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+preview = true
+select = ["E", "F", "I", "UP", "C901", "PLR1702"]
+ignore = ["E501", "E701", "E731", "F401", "F811", "UP006", "UP007", "UP035", "UP045"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.pylint]
+max-nested-blocks = 4
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F841"]
+
+[tool.ruff.format]
+quote-style = "double"

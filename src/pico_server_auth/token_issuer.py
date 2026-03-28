@@ -1,7 +1,7 @@
-from cryptography.hazmat.primitives import serialization
 import time
 from typing import Any
 
+from cryptography.hazmat.primitives import serialization
 from pico_ioc import component
 
 from pico_server_auth.config import ServerAuthSettings

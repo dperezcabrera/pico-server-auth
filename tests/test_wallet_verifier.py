@@ -37,8 +37,8 @@ def test_ed25519_invalid_signature(verifier):
 
 
 def test_secp256k1_valid_signature(verifier):
-    from cryptography.hazmat.primitives.asymmetric import ec
     from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import ec
 
     sk = ec.generate_private_key(ec.SECP256K1())
     pk = sk.public_key()

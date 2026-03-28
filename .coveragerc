@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = pico_server_auth
+omit = */_version.py
+
+[report]
+show_missing = True
