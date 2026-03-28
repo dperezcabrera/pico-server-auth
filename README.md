@@ -67,11 +67,11 @@ Client                    pico-server-auth
 
 ## Supported wallet algorithms
 
-| Algorithm | Chain | Library |
-|-----------|-------|---------|
-| ML-DSA-65 | Dilithia (post-quantum) | `cryptography` |
-| Ed25519 | Solana | `cryptography` |
-| secp256k1 | Ethereum | `cryptography` |
+| Algorithm | Type | Library |
+|-----------|------|---------|
+| ML-DSA-65 | Post-quantum lattice (FIPS 204) | `cryptography` |
+| Ed25519 | Edwards curve | `cryptography` |
+| secp256k1 | Elliptic curve (ECDSA) | `cryptography` |
 
 ## Compatibility with pico-client-auth
 

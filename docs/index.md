@@ -55,7 +55,7 @@ This gives you:
 
 - **ML-DSA-65** — Post-quantum (NIST FIPS 204)
 - **Ed25519** — Edwards-curve Digital Signature Algorithm
-- **secp256k1** — Elliptic curve used by Bitcoin/Ethereum
+- **secp256k1** — Elliptic curve (ECDSA)
 
 ## Next Steps
 

@@ -7,9 +7,8 @@ from pico_server_auth.config import ServerAuthSettings
 class WalletVerifier:
     """Verifies wallet signatures for challenge-response auth.
 
-    Supports ML-DSA-65 (via dilithia-sdk-native or cryptography),
-    Ed25519, and secp256k1. Each backend is loaded on first use
-    to avoid hard dependencies.
+    Supports ML-DSA-65 (FIPS 204), Ed25519, and secp256k1.
+    Each backend is loaded on first use to avoid hard dependencies.
     """
 
     def __init__(self, settings: ServerAuthSettings):
@@ -30,7 +29,7 @@ class WalletVerifier:
 
     @staticmethod
     def _verify_mldsa65(public_key: bytes, message: bytes, signature: bytes) -> bool:
-        # Try dilithia-sdk-native first (exact compatibility with Dilithia blockchain)
+        # Try native SDK backend first
         try:
             from dilithia_sdk.crypto import load_native_crypto_adapter
 
@@ -56,7 +55,7 @@ class WalletVerifier:
         except Exception:
             return False
 
-        raise RuntimeError("ML-DSA-65 verification requires dilithia-sdk[native] or cryptography>=44.0")
+        raise RuntimeError("ML-DSA-65 verification requires a compatible crypto backend")
 
     @staticmethod
     def _verify_ed25519(public_key: bytes, message: bytes, signature: bytes) -> bool:

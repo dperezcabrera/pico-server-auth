@@ -37,7 +37,7 @@ pico-server-auth supports three signature algorithms out of the box:
 |---|---|---|
 | **ML-DSA-65** | Post-quantum lattice-based (NIST FIPS 204) | `cryptography.hazmat.primitives.asymmetric.mldsa` |
 | **Ed25519** | Edwards-curve Digital Signature Algorithm | `cryptography.hazmat.primitives.asymmetric.ed25519` |
-| **secp256k1** | Elliptic curve (Bitcoin/Ethereum) | `cryptography.hazmat.primitives.asymmetric.ec` |
+| **secp256k1** | Elliptic curve (ECDSA) | `cryptography.hazmat.primitives.asymmetric.ec` |
 
 The set of accepted algorithms is controlled by `ServerAuthSettings.supported_wallet_algorithms`.
 

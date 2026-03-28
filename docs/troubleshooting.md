@@ -21,12 +21,10 @@ Only algorithms listed in `server_auth.supported_wallet_algorithms` are accepted
 ## ML-DSA-65 verification fails
 
 ```
-RuntimeError: ML-DSA-65 verification requires dilithia-sdk[native] or cryptography>=44.0
+RuntimeError: ML-DSA-65 verification requires a compatible crypto backend
 ```
 
-Install one of:
-- `pip install dilithia-sdk[native]` — exact Dilithia blockchain compatibility
-- `pip install cryptography>=44.0` — when FIPS 204 support is available
+Install `cryptography>=44.0` when FIPS 204 ML-DSA support is available, or provide a custom `WalletVerifier` component with your own ML-DSA-65 implementation.
 
 ## JWKS fetch failed (pico-client-auth)
 
