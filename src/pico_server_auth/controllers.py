@@ -1,13 +1,25 @@
 from typing import Any
 
 from fastapi import HTTPException
-from pico_client_auth import allow_anonymous
+from pico_client_auth import (
+    SecurityContext,
+    allow_anonymous,
+    requires_role,
+)
 from pico_fastapi import controller, get, post
+from pydantic import BaseModel
 
 from pico_server_auth.challenge_store import ChallengeStore
 from pico_server_auth.config import ServerAuthSettings
+from pico_server_auth.mint_audit_store import MintAuditStore
+from pico_server_auth.revocation_store import RevocationStore
 from pico_server_auth.token_issuer import TokenIssuer
 from pico_server_auth.wallet_verifier import WalletVerifier
+
+
+class RevokeBody(BaseModel):
+    jti: str
+    reason: str = ""
 
 
 @controller(prefix="/api/v1/auth", tags=["Auth"])
@@ -24,11 +36,15 @@ class AuthController:
         challenges: ChallengeStore,
         verifier: WalletVerifier,
         issuer: TokenIssuer,
+        revocations: RevocationStore,
+        mint_audit: MintAuditStore,
     ):
         self._settings = settings
         self._challenges = challenges
         self._verifier = verifier
         self._issuer = issuer
+        self._revocations = revocations
+        self._mint_audit = mint_audit
 
     @allow_anonymous
     @get("/jwks")
@@ -104,6 +120,42 @@ class AuthController:
         }
 
     @allow_anonymous
+    @post("/refresh")
+    async def refresh(self, body: dict[str, Any]):
+        """Exchange a valid refresh token for a fresh access (and a
+        rotated refresh) token. Both bind to the same subject.
+
+        Body:    { "refresh_token": "..." }
+        Returns: { "access_token": "...", "refresh_token": "..." }
+        """
+        from jose import ExpiredSignatureError, JWTError
+
+        token = str(body.get("refresh_token", ""))
+        if not token:
+            raise HTTPException(
+                status_code=400, detail="refresh_token required",
+            )
+        try:
+            claims = self._issuer.verify_refresh(token)
+        except ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="refresh expired")
+        except (JWTError, ValueError) as exc:
+            raise HTTPException(
+                status_code=401, detail=f"refresh invalid: {exc}",
+            )
+        subject = str(claims.get("sub") or "")
+        if not subject:
+            raise HTTPException(status_code=401, detail="missing sub")
+        access_token = self._issuer.issue_access_token(
+            subject=subject, role=self._settings.admin_role,
+        )
+        refresh_token = self._issuer.issue_refresh_token(subject=subject)
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+        }
+
+    @allow_anonymous
     @post("/login")
     async def password_login(self, body: dict[str, Any]):
         """Password-based login (for admin bootstrap).
@@ -120,10 +172,90 @@ class AuthController:
         if email != self._settings.admin_email or password != self._settings.admin_password:
             raise HTTPException(status_code=401, detail="invalid credentials")
 
-        access_token = self._issuer.issue_access_token(subject=email, role="admin")
+        access_token = self._issuer.issue_access_token(
+            subject=email, role=self._settings.admin_role,
+        )
         refresh_token = self._issuer.issue_refresh_token(subject=email)
 
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
         }
+
+    # ── Revocation (jti denylist) ────────────────────────────────
+    #
+    # Backs the no-time-expiry policy (memory:
+    # feedback_no_time_expiry.md). Tokens are valid until JWKS
+    # rotation or until their ``jti`` is added here.
+    #
+    # The revoke endpoint is operator-gated. The list endpoint is
+    # service-gated and used by validators (pico-client-auth) to
+    # cache the denylist locally for fast rejection — without
+    # round-tripping the auth server on every request.
+
+    @requires_role("operator")
+    @post("/revoke")
+    async def revoke(self, body: dict[str, Any]):
+        """Add a ``jti`` to the denylist. Idempotent — re-revoking
+        keeps the original revoked_at + reason.
+
+        The operator typically gets here via the SPA's "Revoke"
+        button in a future Live-Tokens panel. Validators pick up
+        the new entry on their next denylist refresh (default
+        15s). For instant fleet-wide invalidation use JWKS
+        rotation instead.
+        """
+        parsed = RevokeBody.model_validate(body or {})
+        if not parsed.jti:
+            raise HTTPException(400, "jti required")
+        # ``SecurityContext.require`` raises when auth middleware
+        # didn't run (e.g. ``auth_client.enabled=false`` in
+        # pico-server-auth's own runner config — the issuer
+        # doesn't validate JWTs aimed at itself by default).
+        # Audit with whatever subject we have; "unknown" is fine
+        # for dev. Production deployments enable auth_client and
+        # the real ``sub`` shows up.
+        try:
+            ctx = SecurityContext.require()
+            actor = (ctx.sub or "operator")
+        except Exception:   # noqa: BLE001
+            actor = "unknown"
+        entry = self._revocations.revoke(
+            parsed.jti, reason=parsed.reason, revoked_by=actor,
+        )
+        return {"revoked": entry}
+
+    @requires_role("service")
+    @get("/revoked-jtis")
+    async def revoked_jtis(self):
+        """Validators poll this to refresh their local denylist
+        cache. Returns the full list — small enough that a delta
+        protocol isn't justified yet."""
+        return {"items": self._revocations.list_all()}
+
+    @requires_role("operator")
+    @get("/mints")
+    async def list_mints(self, limit: int = 200):
+        """Recent token mints — backs the SPA's "live tokens"
+        panel. Each entry carries ``revoked: bool`` computed
+        on-the-fly so the operator sees which tokens are
+        currently valid + a Revoke button per row.
+
+        Pre-filtered server-side: ephemeral mints (TTL <
+        ``mint_audit_min_ttl_seconds``) are dropped at issue
+        time so this list focuses on tokens that survive long
+        enough to be worth managing.
+        """
+        items = self._mint_audit.list_recent(limit=limit)
+        # Decorate with revocation status — O(N × is_revoked)
+        # which is O(N) for the in-memory dict-backed store.
+        out = []
+        for it in items:
+            jti = str(it.get("jti", ""))
+            out.append({
+                **it,
+                "revoked": (
+                    self._revocations.is_revoked(jti) if jti else False
+                ),
+            })
+        return {"items": out}

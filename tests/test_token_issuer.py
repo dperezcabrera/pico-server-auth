@@ -2,6 +2,7 @@ import pytest
 from jose import jwt
 
 from pico_server_auth.config import ServerAuthSettings
+from pico_server_auth.mint_audit_store import InMemoryMintAuditStore
 from pico_server_auth.token_issuer import TokenIssuer
 
 
@@ -17,7 +18,7 @@ def settings():
 
 @pytest.fixture
 def issuer(settings):
-    return TokenIssuer(settings)
+    return TokenIssuer(settings, InMemoryMintAuditStore())
 
 
 def test_issue_access_token(issuer):

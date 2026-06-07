@@ -178,7 +178,8 @@ def test_issued_token_is_valid_jwt(client):
 
     claims = jwt.decode(token, key, algorithms=["RS256"], audience="test", issuer="http://test")
     assert claims["sub"] == "admin@test.com"
-    assert claims["role"] == "admin"
+    # admin_role defaults to "operator" (configurable via server_auth.admin_role)
+    assert claims["role"] == "operator"
 
 
 def test_wallet_token_has_wallet_claims(client):

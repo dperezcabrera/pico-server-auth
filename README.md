@@ -38,10 +38,14 @@ Scaffold a new project with [pico-initializer](https://dperezcabrera.github.io/p
 ## Endpoints
 
 ```
-GET  /api/v1/auth/jwks           JWKS public keys (pico-client-auth fetches this)
-POST /api/v1/auth/challenge      Request nonce for wallet login
+GET  /api/v1/auth/jwks            JWKS public keys (pico-client-auth fetches this)
+POST /api/v1/auth/challenge       Request nonce for wallet login
 POST /api/v1/auth/sign-in         Verify wallet signature, issue JWT
-POST /api/v1/auth/login          Password login (admin bootstrap)
+POST /api/v1/auth/login           Password login (admin bootstrap)
+POST /api/v1/auth/fleet/sessions  Mint a fleet session token (X-Fleet-Secret gated)   [v0.1.2]
+POST /api/v1/auth/revoke          Revoke a token by jti (operator-gated)               [v0.1.2]
+GET  /api/v1/auth/revoked-jtis    jti denylist (polled by pico-client-auth)            [v0.1.2]
+GET  /api/v1/auth/mints           Currently-valid long-lived tokens (audit view)       [v0.1.2]
 ```
 
 ## Wallet login flow
@@ -116,6 +120,14 @@ server_auth:
     - "ML-DSA-65"
     - "Ed25519"
     - "secp256k1"
+
+  # ── v0.1.2: agent/fleet, revocation & mint audit ──
+  admin_role: "operator"            # role stamped on password-login tokens
+  fleet_mint_secret: ""             # set to enable POST /fleet/sessions (X-Fleet-Secret)
+  fleet_session_ttl_seconds: 86400  # default fleet session lifetime (24h)
+  revocation_store_path: ""         # JSONL path for the jti denylist (empty = in-memory)
+  mint_audit_path: ""               # JSONL path for the mint audit log (empty = in-memory)
+  mint_audit_min_ttl_seconds: 300   # don't audit mints shorter-lived than this
 ```
 
 ## Stack

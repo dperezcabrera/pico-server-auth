@@ -18,7 +18,7 @@ It uses:
 ## Key Components
 
 - **`ServerAuthSettings`**: `@configured(prefix="server_auth")` — issuer, audience, algorithm, TTLs, admin credentials, supported wallet algorithms
-- **`AuthController`**: `@controller(prefix="/auth")` — endpoints: `/auth/jwks`, `/auth/challenge`, `/auth/wallet`, `/auth/login`
+- **`AuthController`**: `@controller(prefix="/api/v1/auth")` — endpoints: `/api/v1/auth/jwks`, `/api/v1/auth/challenge`, `/api/v1/auth/sign-in`, `/api/v1/auth/login`
 - **`TokenIssuer`**: `@component` — RSA key generation, JWT signing, JWKS export
 - **`WalletVerifier`**: `@component` — signature verification for ML-DSA-65, Ed25519, secp256k1
 - **`ChallengeStore`**: Protocol with `InMemoryChallengeStore` default (`@component(on_missing_selector=ChallengeStore)`)

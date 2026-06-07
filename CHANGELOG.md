@@ -5,6 +5,18 @@ All notable changes to pico-server-auth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-06-07
+
+### Added
+- **Fleet session-token mint** — `POST /api/v1/auth/fleet/sessions`, gated by a shared secret in the `X-Fleet-Secret` header (config `server_auth.fleet_mint_secret`; empty disables the endpoint). Intended caller is fleet-runtime.
+- **`jti` revocation** — `POST /api/v1/auth/revoke` (operator-gated) and `GET /api/v1/auth/revoked-jtis` (polled by pico-client-auth). Backed by a `RevocationStore` (in-memory or JSONL via `revocation_store_path`).
+- **Mint audit log** — `GET /api/v1/auth/mints` lists currently-valid long-lived tokens for the operator's "live tokens" view. Backed by a `MintAuditStore` (in-memory or JSONL via `mint_audit_path`); ephemeral mints below `mint_audit_min_ttl_seconds` are filtered out.
+- New config: `admin_role` (default `"operator"`), `fleet_mint_secret`, `fleet_session_ttl_seconds`, `fleet_max_ttl_seconds`, `revocation_store_path`, `mint_audit_path`, `mint_audit_min_ttl_seconds`, `mint_audit_max_in_memory`.
+
+### Changed
+- Password-login tokens are now stamped with the configurable `admin_role` (default `"operator"`) instead of a hardcoded `"admin"`.
+- Declared the `pico-client-auth` dependency explicitly in `pyproject.toml` (was imported by `controllers.py` but undeclared).
+
 ## [0.1.1] - 2026-03-28
 
 ### Changed
