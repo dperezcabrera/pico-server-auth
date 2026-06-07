@@ -39,7 +39,7 @@ class ServerAuthSettings:
     # Default TTL when callers don't specify one. Long enough that
     # routine workloads never re-mint, short enough to bound damage
     # if the operator forgets to revoke. Override per-deployment.
-    fleet_session_ttl_seconds: int = 86400   # 24 h default
+    fleet_session_ttl_seconds: int = 86400  # 24 h default
     # Hard ceiling — caller-supplied TTLs above this are clamped.
     # Memory: feedback_no_time_expiry.md — fleet policy is "tokens
     # invalidated only by revocation, not time". We default to

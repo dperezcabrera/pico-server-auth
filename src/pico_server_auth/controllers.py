@@ -133,7 +133,8 @@ class AuthController:
         token = str(body.get("refresh_token", ""))
         if not token:
             raise HTTPException(
-                status_code=400, detail="refresh_token required",
+                status_code=400,
+                detail="refresh_token required",
             )
         try:
             claims = self._issuer.verify_refresh(token)
@@ -141,13 +142,15 @@ class AuthController:
             raise HTTPException(status_code=401, detail="refresh expired")
         except (JWTError, ValueError) as exc:
             raise HTTPException(
-                status_code=401, detail=f"refresh invalid: {exc}",
+                status_code=401,
+                detail=f"refresh invalid: {exc}",
             )
         subject = str(claims.get("sub") or "")
         if not subject:
             raise HTTPException(status_code=401, detail="missing sub")
         access_token = self._issuer.issue_access_token(
-            subject=subject, role=self._settings.admin_role,
+            subject=subject,
+            role=self._settings.admin_role,
         )
         refresh_token = self._issuer.issue_refresh_token(subject=subject)
         return {
@@ -173,7 +176,8 @@ class AuthController:
             raise HTTPException(status_code=401, detail="invalid credentials")
 
         access_token = self._issuer.issue_access_token(
-            subject=email, role=self._settings.admin_role,
+            subject=email,
+            role=self._settings.admin_role,
         )
         refresh_token = self._issuer.issue_refresh_token(subject=email)
 
@@ -217,11 +221,13 @@ class AuthController:
         # the real ``sub`` shows up.
         try:
             ctx = SecurityContext.require()
-            actor = (ctx.sub or "operator")
-        except Exception:   # noqa: BLE001
+            actor = ctx.sub or "operator"
+        except Exception:  # noqa: BLE001
             actor = "unknown"
         entry = self._revocations.revoke(
-            parsed.jti, reason=parsed.reason, revoked_by=actor,
+            parsed.jti,
+            reason=parsed.reason,
+            revoked_by=actor,
         )
         return {"revoked": entry}
 
@@ -252,10 +258,10 @@ class AuthController:
         out = []
         for it in items:
             jti = str(it.get("jti", ""))
-            out.append({
-                **it,
-                "revoked": (
-                    self._revocations.is_revoked(jti) if jti else False
-                ),
-            })
+            out.append(
+                {
+                    **it,
+                    "revoked": (self._revocations.is_revoked(jti) if jti else False),
+                }
+            )
         return {"items": out}

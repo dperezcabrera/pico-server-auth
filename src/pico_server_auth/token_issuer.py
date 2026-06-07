@@ -39,7 +39,9 @@ class TokenIssuer:
         self._init_keys()
 
     def _audit_mint(
-        self, payload: dict, kind: str,
+        self,
+        payload: dict,
+        kind: str,
     ) -> None:
         """Append to the mint audit log when the token's lifetime
         is meaningful enough to track. Pre-filters ephemeral
@@ -66,12 +68,14 @@ class TokenIssuer:
         }
         try:
             self._audit.append(entry)
-        except Exception:   # noqa: BLE001
+        except Exception:  # noqa: BLE001
             # Audit failure must never block a mint. The operator
             # gets a log line; the token itself is still valid.
             import logging as _logging
+
             _logging.getLogger(__name__).warning(
-                "mint audit append failed", exc_info=True,
+                "mint audit append failed",
+                exc_info=True,
             )
 
     def _init_keys(self) -> None:
@@ -131,7 +135,9 @@ class TokenIssuer:
             encryption_algorithm=serialization.NoEncryption(),
         )
         token = jwt.encode(
-            payload, pem, algorithm="RS256",
+            payload,
+            pem,
+            algorithm="RS256",
             headers={"kid": self._kid},
         )
         self._audit_mint(payload, kind="sign")
@@ -153,7 +159,8 @@ class TokenIssuer:
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         )
         payload = jwt.decode(
-            token, pub_pem,
+            token,
+            pub_pem,
             algorithms=["RS256"],
             audience=self._settings.audience,
             issuer=self._settings.issuer,

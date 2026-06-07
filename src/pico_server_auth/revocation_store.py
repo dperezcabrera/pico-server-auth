@@ -47,7 +47,11 @@ class RevocationStore(Protocol):
     """
 
     def revoke(
-        self, jti: str, *, reason: str = "", revoked_by: str = "",
+        self,
+        jti: str,
+        *,
+        reason: str = "",
+        revoked_by: str = "",
     ) -> dict: ...
 
     def is_revoked(self, jti: str) -> bool: ...
@@ -75,7 +79,11 @@ class InMemoryRevocationStore:
         self._entries: dict[str, dict] = {}
 
     def revoke(
-        self, jti: str, *, reason: str = "", revoked_by: str = "",
+        self,
+        jti: str,
+        *,
+        reason: str = "",
+        revoked_by: str = "",
     ) -> dict:
         # Idempotent — re-revoking is a no-op (preserves the
         # original revoked_at so audits stay accurate).
@@ -147,7 +155,9 @@ class JsonFileRevocationStore:
                     except json.JSONDecodeError as exc:
                         log.warning(
                             "revocation log %s:%d malformed: %s",
-                            self._path, line_no, exc,
+                            self._path,
+                            line_no,
+                            exc,
                         )
                         continue
                     jti = str(entry.get("jti", ""))
@@ -159,16 +169,22 @@ class JsonFileRevocationStore:
                     self._entries[jti] = entry
             log.info(
                 "revocation store loaded %d entries from %s",
-                len(self._entries), self._path,
+                len(self._entries),
+                self._path,
             )
         except OSError as exc:
             log.warning(
                 "revocation store could not read %s: %s",
-                self._path, exc,
+                self._path,
+                exc,
             )
 
     def revoke(
-        self, jti: str, *, reason: str = "", revoked_by: str = "",
+        self,
+        jti: str,
+        *,
+        reason: str = "",
+        revoked_by: str = "",
     ) -> dict:
         with self._lock:
             if jti in self._entries:
@@ -207,7 +223,8 @@ class JsonFileRevocationStore:
             # know the durability invariant is broken.
             log.error(
                 "revocation store append to %s failed: %s",
-                self._path, exc,
+                self._path,
+                exc,
             )
 
 
@@ -228,14 +245,14 @@ class DefaultRevocationStore:
             try:
                 impl = JsonFileRevocationStore(path)
                 log.info(
-                    "RevocationStore: persistent at %s", path,
+                    "RevocationStore: persistent at %s",
+                    path,
                 )
-            except Exception as exc:   # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
                 log.warning(
-                    "RevocationStore: failed to open %s, falling "
-                    "back to in-memory (revocations LOST on "
-                    "restart): %s",
-                    path, exc,
+                    "RevocationStore: failed to open %s, falling back to in-memory (revocations LOST on restart): %s",
+                    path,
+                    exc,
                 )
                 impl = InMemoryRevocationStore()
         else:
@@ -243,10 +260,16 @@ class DefaultRevocationStore:
         self._impl = impl
 
     def revoke(
-        self, jti: str, *, reason: str = "", revoked_by: str = "",
+        self,
+        jti: str,
+        *,
+        reason: str = "",
+        revoked_by: str = "",
     ) -> dict:
         return self._impl.revoke(  # type: ignore[attr-defined]
-            jti, reason=reason, revoked_by=revoked_by,
+            jti,
+            reason=reason,
+            revoked_by=revoked_by,
         )
 
     def is_revoked(self, jti: str) -> bool:

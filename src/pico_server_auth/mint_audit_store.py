@@ -82,7 +82,9 @@ class JsonFileMintAuditStore:
     """
 
     def __init__(
-        self, path: str | os.PathLike, max_in_memory: int = 5000,
+        self,
+        path: str | os.PathLike,
+        max_in_memory: int = 5000,
     ):
         self._path = Path(path)
         # Deque so old entries auto-evict at the cap. The disk
@@ -113,17 +115,21 @@ class JsonFileMintAuditStore:
                     except json.JSONDecodeError as exc:
                         log.warning(
                             "mint audit %s:%d malformed: %s",
-                            self._path, line_no, exc,
+                            self._path,
+                            line_no,
+                            exc,
                         )
             log.info(
                 "mint audit loaded %d entries from %s (cap %d)",
-                len(self._entries), self._path,
+                len(self._entries),
+                self._path,
                 self._entries.maxlen or 0,
             )
         except OSError as exc:
             log.warning(
                 "mint audit could not read %s: %s",
-                self._path, exc,
+                self._path,
+                exc,
             )
 
     def append(self, entry: dict) -> dict:
@@ -140,7 +146,8 @@ class JsonFileMintAuditStore:
             except OSError as exc:
                 log.error(
                     "mint audit append to %s failed: %s",
-                    self._path, exc,
+                    self._path,
+                    exc,
                 )
         return entry
 
@@ -164,13 +171,14 @@ class DefaultMintAuditStore:
                 impl = JsonFileMintAuditStore(path, max_in_memory=cap)
                 log.info(
                     "MintAuditStore: persistent at %s (cap %d)",
-                    path, cap,
+                    path,
+                    cap,
                 )
-            except Exception as exc:   # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
                 log.warning(
-                    "MintAuditStore: failed to open %s, falling "
-                    "back to in-memory (mints LOST on restart): "
-                    "%s", path, exc,
+                    "MintAuditStore: failed to open %s, falling back to in-memory (mints LOST on restart): %s",
+                    path,
+                    exc,
                 )
                 impl = InMemoryMintAuditStore(max_in_memory=cap)
         else:

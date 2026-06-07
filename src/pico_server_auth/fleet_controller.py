@@ -36,7 +36,7 @@ class FleetSessionMintBody(BaseModel):
     session_id: str
     agent_id: str
     role: str = "agent"
-    ttl: int | None = None       # seconds; clamped to fleet_max_ttl_seconds
+    ttl: int | None = None  # seconds; clamped to fleet_max_ttl_seconds
     scope: str | None = None
 
 
@@ -61,14 +61,15 @@ class FleetAuthController:
         if not expected:
             raise HTTPException(
                 status_code=404,
-                detail="fleet mint endpoint disabled "
-                       "(server_auth.fleet_mint_secret unset)",
+                detail="fleet mint endpoint disabled (server_auth.fleet_mint_secret unset)",
             )
         if not x_fleet_secret or not hmac.compare_digest(
-            x_fleet_secret, expected,
+            x_fleet_secret,
+            expected,
         ):
             raise HTTPException(
-                status_code=401, detail="invalid X-Fleet-Secret",
+                status_code=401,
+                detail="invalid X-Fleet-Secret",
             )
 
         if not body.session_id or not body.agent_id:
