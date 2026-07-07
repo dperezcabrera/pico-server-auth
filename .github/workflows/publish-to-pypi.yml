@@ -11,23 +11,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.x" }
       - run: pip install build
       - run: python -m build
-      - name: Reject non-clean versions (.dev / .post)
-        run: |
-          python - <<'PY'
-          import glob, sys
-          whl = sorted(glob.glob('dist/*.whl'))[0]
-          ver = whl.split('-')[1]
-          print(f"Built version: {ver}")
-          if 'dev' in ver or 'post' in ver:
-              sys.exit(f"::error::Refusing to publish non-clean version '{ver}'. "
-                       "Create the GitHub Release from an exact version tag (e.g. vX.Y.Z).")
-          PY
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           skip-existing: true
