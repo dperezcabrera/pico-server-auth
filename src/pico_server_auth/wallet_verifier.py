@@ -35,15 +35,24 @@ class WalletVerifier:
 
             adapter = load_native_crypto_adapter()
             if adapter is not None:
+                # SECURITY: verify over the EXACT message bytes. The
+                # signed message is an opaque nonce and may not be valid
+                # UTF-8; decoding it with errors="replace" would have
+                # verified a DIFFERENT (mangled) message than the one the
+                # signature actually covers — and could differ from the
+                # cryptography fallback below. Pass the raw bytes as hex
+                # so both backends check identical content.
                 return adapter.verify_message(
                     public_key.hex(),
-                    message.decode("utf-8", errors="replace"),
+                    message.hex(),
                     signature.hex(),
                 )
         except ImportError:
             pass
 
         # Fallback: cryptography lib (when FIPS 204 support is available)
+        # Verifies over the same exact ``message`` bytes as the native
+        # path above, so both backends check identical content.
         try:
             from cryptography.hazmat.primitives.asymmetric import mldsa
 
@@ -68,11 +77,26 @@ class WalletVerifier:
         except Exception:
             return False
 
+    # Order of the secp256k1 curve (n). Signatures with S > n//2 are the
+    # "high-S" half and are rejected as non-canonical to remove ECDSA
+    # signature malleability (a valid (r, S) can be flipped to (r, n-S)).
+    _SECP256K1_N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+
     @staticmethod
     def _verify_secp256k1(public_key: bytes, message: bytes, signature: bytes) -> bool:
         try:
             from cryptography.hazmat.primitives import hashes
             from cryptography.hazmat.primitives.asymmetric import ec
+            from cryptography.hazmat.primitives.asymmetric.utils import (
+                decode_dss_signature,
+            )
+
+            # SECURITY: enforce low-S / canonical signatures to kill ECDSA
+            # malleability. Reject before the cryptographic check so a
+            # high-S variant of an otherwise-valid signature is refused.
+            _, s = decode_dss_signature(signature)
+            if s > WalletVerifier._SECP256K1_N // 2:
+                return False
 
             pk = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256K1(), public_key)
             pk.verify(signature, message, ec.ECDSA(hashes.SHA256()))

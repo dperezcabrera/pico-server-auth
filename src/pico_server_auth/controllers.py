@@ -105,17 +105,31 @@ class AuthController:
         if not self._verifier.verify(algorithm, public_key, message, signature):
             raise HTTPException(status_code=401, detail="signature verification failed")
 
+        # SECURITY: the authenticated identity MUST derive from the
+        # VERIFIED public key, never from the client-supplied ``address``
+        # (which is attacker-controlled and only used to look up the
+        # challenge). Canonical wallet id = hex of the verified public
+        # key bytes. If the client also sent an ``address`` we require it
+        # to equal this derived value — a derived id, so a plain ``==``
+        # comparison is sufficient (no secret involved).
+        wallet_id = public_key.hex()
+        if address and address != wallet_id:
+            raise HTTPException(
+                status_code=400,
+                detail="address does not match verified public key",
+            )
+
         access_token = self._issuer.issue_access_token(
-            subject=address,
+            subject=wallet_id,
             role="wallet",
-            extra_claims={"algorithm": algorithm, "wallet_address": address},
+            extra_claims={"algorithm": algorithm, "wallet_address": wallet_id},
         )
-        refresh_token = self._issuer.issue_refresh_token(subject=address)
+        refresh_token = self._issuer.issue_refresh_token(subject=wallet_id, role="wallet")
 
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "address": address,
+            "address": wallet_id,
             "algorithm": algorithm,
         }
 
@@ -148,11 +162,19 @@ class AuthController:
         subject = str(claims.get("sub") or "")
         if not subject:
             raise HTTPException(status_code=401, detail="missing sub")
+        # SECURITY: carry the ORIGINAL role forward — never hard-code
+        # admin/operator here, or a low-privilege refresh token could be
+        # exchanged for a privileged access token (role escalation).
+        # Default to the least-privileged "user" if the original token
+        # carried no role.
+        original_role = str(claims.get("role") or "user")
         access_token = self._issuer.issue_access_token(
             subject=subject,
-            role=self._settings.admin_role,
+            role=original_role,
         )
-        refresh_token = self._issuer.issue_refresh_token(subject=subject)
+        # Rotate the refresh token preserving the same role so the bound
+        # privilege level survives across refreshes.
+        refresh_token = self._issuer.issue_refresh_token(subject=subject, role=original_role)
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -179,7 +201,7 @@ class AuthController:
             subject=email,
             role=self._settings.admin_role,
         )
-        refresh_token = self._issuer.issue_refresh_token(subject=email)
+        refresh_token = self._issuer.issue_refresh_token(subject=email, role=self._settings.admin_role)
 
         return {
             "access_token": access_token,

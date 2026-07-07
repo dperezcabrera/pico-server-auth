@@ -71,20 +71,23 @@ def test_challenge_requires_address(client):
 
 
 def test_wallet_login_ed25519(client):
-    # Get challenge
-    r = client.post("/api/v1/auth/challenge", json={"address": "0xed25519"})
+    # The canonical wallet id is the verified public key hex; address must equal it.
+    sk = Ed25519PrivateKey.generate()
+    pk = sk.public_key()
+    addr = pk.public_bytes_raw().hex()
+
+    # Get challenge (keyed by address == pubkey hex)
+    r = client.post("/api/v1/auth/challenge", json={"address": addr})
     nonce = r.json()["challenge"]
 
     # Sign
-    sk = Ed25519PrivateKey.generate()
-    pk = sk.public_key()
     signature = sk.sign(nonce.encode("utf-8"))
 
     r = client.post(
         "/api/v1/auth/sign-in",
         json={
-            "address": "0xed25519",
-            "public_key": pk.public_bytes_raw().hex(),
+            "address": addr,
+            "public_key": addr,
             "signature": signature.hex(),
             "challenge": nonce,
             "algorithm": "Ed25519",
@@ -94,8 +97,31 @@ def test_wallet_login_ed25519(client):
     data = r.json()
     assert "access_token" in data
     assert "refresh_token" in data
-    assert data["address"] == "0xed25519"
+    assert data["address"] == addr
     assert data["algorithm"] == "Ed25519"
+
+
+def test_wallet_login_address_pubkey_mismatch_rejected(client):
+    # Account-takeover regression: signing the nonce with the attacker's own
+    # key while claiming a victim address must be rejected, not minted.
+    victim = "00" * 32  # some address the attacker does not own
+    r = client.post("/api/v1/auth/challenge", json={"address": victim})
+    nonce = r.json()["challenge"]
+
+    attacker = Ed25519PrivateKey.generate()
+    signature = attacker.sign(nonce.encode("utf-8"))
+
+    r = client.post(
+        "/api/v1/auth/sign-in",
+        json={
+            "address": victim,
+            "public_key": attacker.public_key().public_bytes_raw().hex(),
+            "signature": signature.hex(),
+            "challenge": nonce,
+            "algorithm": "Ed25519",
+        },
+    )
+    assert r.status_code == 400
 
 
 def test_wallet_login_invalid_challenge(client):
@@ -183,18 +209,20 @@ def test_issued_token_is_valid_jwt(client):
 
 
 def test_wallet_token_has_wallet_claims(client):
-    r = client.post("/api/v1/auth/challenge", json={"address": "0xclaims"})
-    nonce = r.json()["challenge"]
-
     sk = Ed25519PrivateKey.generate()
     pk = sk.public_key()
+    addr = pk.public_bytes_raw().hex()
+
+    r = client.post("/api/v1/auth/challenge", json={"address": addr})
+    nonce = r.json()["challenge"]
+
     signature = sk.sign(nonce.encode("utf-8"))
 
     r = client.post(
         "/api/v1/auth/sign-in",
         json={
-            "address": "0xclaims",
-            "public_key": pk.public_bytes_raw().hex(),
+            "address": addr,
+            "public_key": addr,
             "signature": signature.hex(),
             "challenge": nonce,
             "algorithm": "Ed25519",
@@ -208,7 +236,7 @@ def test_wallet_token_has_wallet_claims(client):
     from jose import jwt
 
     claims = jwt.decode(token, key, algorithms=["RS256"], audience="test", issuer="http://test")
-    assert claims["sub"] == "0xclaims"
+    assert claims["sub"] == addr
     assert claims["role"] == "wallet"
     assert claims["algorithm"] == "Ed25519"
-    assert claims["wallet_address"] == "0xclaims"
+    assert claims["wallet_address"] == addr
