@@ -15,18 +15,20 @@ from pico_boot import init
 from pico_ioc import DictSource, configuration
 
 config = configuration(
-    DictSource({
-        "fastapi": {"title": "Auth Service", "version": "1.0.0"},
-        "auth_client": {"enabled": False, "issuer": "", "audience": ""},
-        "server_auth": {
-            "issuer": "http://localhost:8100",
-            "audience": "my-api",
-            "auto_create_admin": True,
-            "admin_email": "admin@example.com",
-            "admin_password": "changeme",
-            "supported_wallet_algorithms": ["ML-DSA-65", "Ed25519", "secp256k1"],
-        },
-    })
+    DictSource(
+        {
+            "fastapi": {"title": "Auth Service", "version": "1.0.0"},
+            "auth_client": {"enabled": False, "issuer": "", "audience": ""},
+            "server_auth": {
+                "issuer": "http://localhost:8100",
+                "audience": "my-api",
+                "auto_create_admin": True,
+                "admin_email": "admin@example.com",
+                "admin_password": "changeme",
+                "supported_wallet_algorithms": ["ML-DSA-65", "Ed25519", "secp256k1"],
+            },
+        }
+    )
 )
 
 container = init(modules=["pico_server_auth"], config=config)

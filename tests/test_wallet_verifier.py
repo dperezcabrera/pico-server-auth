@@ -39,16 +39,48 @@ def test_ed25519_invalid_signature(verifier):
 def test_secp256k1_valid_signature(verifier):
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.asymmetric.utils import (
+        decode_dss_signature,
+        encode_dss_signature,
+    )
 
     sk = ec.generate_private_key(ec.SECP256K1())
     pk = sk.public_key()
     message = b"test challenge"
     signature = sk.sign(message, ec.ECDSA(hashes.SHA256()))
 
+    n = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+    r, s = decode_dss_signature(signature)
+    if s > n // 2:
+        signature = encode_dss_signature(r, n - s)
+
     from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
     pk_bytes = pk.public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
     assert verifier.verify("secp256k1", pk_bytes, message, signature) is True
+
+
+def test_secp256k1_high_s_signature_is_rejected(verifier):
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.asymmetric.utils import (
+        decode_dss_signature,
+        encode_dss_signature,
+    )
+
+    sk = ec.generate_private_key(ec.SECP256K1())
+    pk = sk.public_key()
+    message = b"test challenge"
+    signature = sk.sign(message, ec.ECDSA(hashes.SHA256()))
+
+    n = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+    r, s = decode_dss_signature(signature)
+    high_s = encode_dss_signature(r, n - s if s <= n // 2 else s)
+
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+    pk_bytes = pk.public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
+    assert verifier.verify("secp256k1", pk_bytes, message, high_s) is False
 
 
 def test_secp256k1_invalid_signature(verifier):
