@@ -24,7 +24,6 @@ this module's auto-fallback plugs them in.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import threading
@@ -34,6 +33,7 @@ from typing import Protocol
 
 from pico_ioc import component, configured
 
+from pico_server_auth._jsonl import append_jsonl, iter_jsonl
 from pico_server_auth.config import ServerAuthSettings
 
 log = logging.getLogger(__name__)
@@ -136,47 +136,28 @@ class JsonFileRevocationStore:
     """
 
     def __init__(self, path: str | os.PathLike):
-        self._path = Path(path)
+        # ``~`` expansion only — the store path is operator-config and is
+        # a deliberate trust boundary (no sandboxing of where operators
+        # may persist their denylist).
+        self._path = Path(path).expanduser()
         self._entries: dict[str, dict] = {}
         self._lock = threading.Lock()
         self._load()
 
     def _load(self) -> None:
-        if not self._path.exists():
-            return
-        try:
-            with self._path.open("r", encoding="utf-8") as f:
-                for line_no, line in enumerate(f, 1):
-                    line = line.strip()
-                    if not line:
-                        continue
-                    try:
-                        entry = json.loads(line)
-                    except json.JSONDecodeError as exc:
-                        log.warning(
-                            "revocation log %s:%d malformed: %s",
-                            self._path,
-                            line_no,
-                            exc,
-                        )
-                        continue
-                    jti = str(entry.get("jti", ""))
-                    if not jti:
-                        continue
-                    # Last-write-wins on duplicate jtis (shouldn't
-                    # happen with idempotent revoke, but tolerate
-                    # hand-edited files).
-                    self._entries[jti] = entry
+        existed = self._path.exists()
+        for entry in iter_jsonl(self._path, label="revocation log"):
+            jti = str(entry.get("jti", ""))
+            if not jti:
+                continue
+            # Last-write-wins on duplicate jtis (shouldn't happen with
+            # idempotent revoke, but tolerate hand-edited files).
+            self._entries[jti] = entry
+        if existed:
             log.info(
                 "revocation store loaded %d entries from %s",
                 len(self._entries),
                 self._path,
-            )
-        except OSError as exc:
-            log.warning(
-                "revocation store could not read %s: %s",
-                self._path,
-                exc,
             )
 
     def revoke(
@@ -210,22 +191,11 @@ class JsonFileRevocationStore:
         )
 
     def _append(self, entry: dict) -> None:
-        try:
-            self._path.parent.mkdir(parents=True, exist_ok=True)
-            with self._path.open("a", encoding="utf-8") as f:
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-                f.flush()
-                os.fsync(f.fileno())
-        except OSError as exc:
-            # Loud but non-fatal — the in-memory mirror still
-            # rejects the revoked jti for the rest of this
-            # process's lifetime. Operator gets a log line so they
-            # know the durability invariant is broken.
-            log.error(
-                "revocation store append to %s failed: %s",
-                self._path,
-                exc,
-            )
+        # Loud but non-fatal on failure — the in-memory mirror still
+        # rejects the revoked jti for the rest of this process's
+        # lifetime, and the operator gets a log line so they know the
+        # durability invariant is broken.
+        append_jsonl(self._path, entry, label="revocation store")
 
 
 @component(on_missing_selector=RevocationStore)

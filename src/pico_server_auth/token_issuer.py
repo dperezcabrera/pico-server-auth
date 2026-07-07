@@ -169,7 +169,7 @@ class TokenIssuer:
             raise ValueError("not a refresh token")
         return payload
 
-    def issue_refresh_token(self, subject: str) -> str:
+    def issue_refresh_token(self, subject: str, role: str | None = None) -> str:
         from jose import jwt
 
         now = int(time.time())
@@ -182,6 +182,12 @@ class TokenIssuer:
             "jti": _new_jti(),
             "type": "refresh",
         }
+        # Bind the role onto the refresh token so /refresh can mint a new
+        # access token with the SAME role (no escalation, no downgrade).
+        # Optional/back-compat: legacy refresh tokens without a role fall
+        # back to "user" at the /refresh endpoint.
+        if role is not None:
+            payload["role"] = role
 
         pem = self._private_key.private_bytes(
             encoding=serialization.Encoding.PEM,

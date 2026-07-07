@@ -21,21 +21,23 @@ class MyController:
 
 
 config = configuration(
-    DictSource({
-        "fastapi": {"title": "My App", "version": "1.0.0"},
-        "auth_client": {
-            "enabled": True,
-            "issuer": "http://localhost:8000",
-            "audience": "my-app",
-        },
-        "server_auth": {
-            "issuer": "http://localhost:8000",
-            "audience": "my-app",
-            "auto_create_admin": True,
-            "admin_email": "admin@example.com",
-            "admin_password": "admin",
-        },
-    })
+    DictSource(
+        {
+            "fastapi": {"title": "My App", "version": "1.0.0"},
+            "auth_client": {
+                "enabled": True,
+                "issuer": "http://localhost:8000",
+                "audience": "my-app",
+            },
+            "server_auth": {
+                "issuer": "http://localhost:8000",
+                "audience": "my-app",
+                "auto_create_admin": True,
+                "admin_email": "admin@example.com",
+                "admin_password": "admin",
+            },
+        }
+    )
 )
 
 container = init(modules=["__main__"], config=config)  # pico-server-auth auto-discovered

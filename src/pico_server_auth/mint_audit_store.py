@@ -17,17 +17,16 @@ size envelopes, different retention policies.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import threading
-import time
 from collections import deque
 from pathlib import Path
 from typing import Deque, Protocol
 
 from pico_ioc import component
 
+from pico_server_auth._jsonl import append_jsonl, iter_jsonl
 from pico_server_auth.config import ServerAuthSettings
 
 log = logging.getLogger(__name__)
@@ -63,9 +62,7 @@ class InMemoryMintAuditStore:
 
     def list_recent(self, limit: int = 200) -> list[dict]:
         # Newest first — operator usually wants the latest mints.
-        items = list(self._entries)[-limit:]
-        items.reverse()
-        return items
+        return list(reversed(list(self._entries)[-limit:]))
 
 
 class JsonFileMintAuditStore:
@@ -86,7 +83,10 @@ class JsonFileMintAuditStore:
         path: str | os.PathLike,
         max_in_memory: int = 5000,
     ):
-        self._path = Path(path)
+        # ``~`` expansion only — the path is operator-config and is a
+        # deliberate trust boundary (no sandboxing of where operators may
+        # persist the audit log).
+        self._path = Path(path).expanduser()
         # Deque so old entries auto-evict at the cap. The disk
         # file is the long-term audit; this is just the working
         # set served to the SPA.
@@ -95,66 +95,29 @@ class JsonFileMintAuditStore:
         self._load()
 
     def _load(self) -> None:
-        if not self._path.exists():
-            return
-        try:
-            with self._path.open("r", encoding="utf-8") as f:
-                for line_no, line in enumerate(f, 1):
-                    line = line.strip()
-                    if not line:
-                        continue
-                    try:
-                        # Append to the deque; entries past the
-                        # maxlen are dropped, leaving only the
-                        # tail of the file in RAM. For files much
-                        # bigger than maxlen this still scans the
-                        # whole file once at boot — a future
-                        # optimisation could use a reverse-tail
-                        # reader.
-                        self._entries.append(json.loads(line))
-                    except json.JSONDecodeError as exc:
-                        log.warning(
-                            "mint audit %s:%d malformed: %s",
-                            self._path,
-                            line_no,
-                            exc,
-                        )
+        existed = self._path.exists()
+        # Append to the deque; entries past the maxlen are dropped,
+        # leaving only the tail of the file in RAM. For files much
+        # bigger than maxlen this still scans the whole file once at
+        # boot — a future optimisation could use a reverse-tail reader.
+        for entry in iter_jsonl(self._path, label="mint audit"):
+            self._entries.append(entry)
+        if existed:
             log.info(
                 "mint audit loaded %d entries from %s (cap %d)",
                 len(self._entries),
                 self._path,
                 self._entries.maxlen or 0,
             )
-        except OSError as exc:
-            log.warning(
-                "mint audit could not read %s: %s",
-                self._path,
-                exc,
-            )
 
     def append(self, entry: dict) -> dict:
         with self._lock:
             self._entries.append(entry)
-            try:
-                self._path.parent.mkdir(parents=True, exist_ok=True)
-                with self._path.open("a", encoding="utf-8") as f:
-                    f.write(
-                        json.dumps(entry, ensure_ascii=False) + "\n",
-                    )
-                    f.flush()
-                    os.fsync(f.fileno())
-            except OSError as exc:
-                log.error(
-                    "mint audit append to %s failed: %s",
-                    self._path,
-                    exc,
-                )
+            append_jsonl(self._path, entry, label="mint audit")
         return entry
 
     def list_recent(self, limit: int = 200) -> list[dict]:
-        items = list(self._entries)[-limit:]
-        items.reverse()
-        return items
+        return list(reversed(list(self._entries)[-limit:]))
 
 
 @component(on_missing_selector=MintAuditStore)
