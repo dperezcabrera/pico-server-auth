@@ -80,3 +80,119 @@ def test_jwks_is_stable(issuer):
     jwks1 = issuer.jwks()
     jwks2 = issuer.jwks()
     assert jwks1 == jwks2
+
+
+def _decode(issuer, settings, token):
+    return jwt.decode(
+        token,
+        issuer.jwks()["keys"][0],
+        algorithms=["RS256"],
+        audience=settings.audience,
+        issuer=settings.issuer,
+    )
+
+
+def test_sign_injects_jti(issuer, settings):
+    import time
+
+    now = int(time.time())
+    payload = {"sub": "s1", "iss": settings.issuer, "aud": settings.audience, "iat": now, "exp": now + 60}
+    claims = _decode(issuer, settings, issuer.sign(payload))
+    assert claims["sub"] == "s1"
+    assert claims["jti"]
+
+
+def test_sign_preserves_caller_jti(issuer, settings):
+    import time
+
+    now = int(time.time())
+    payload = {
+        "sub": "s1",
+        "iss": settings.issuer,
+        "aud": settings.audience,
+        "iat": now,
+        "exp": now + 60,
+        "jti": "fixed",
+    }
+    assert _decode(issuer, settings, issuer.sign(payload))["jti"] == "fixed"
+
+
+def test_verify_refresh_roundtrip(issuer):
+    token = issuer.issue_refresh_token("user@test.com", role="admin")
+    claims = issuer.verify_refresh(token)
+    assert claims["sub"] == "user@test.com"
+    assert claims["role"] == "admin"
+    assert claims["type"] == "refresh"
+
+
+def test_verify_refresh_rejects_access_token(issuer):
+    token = issuer.issue_access_token("user@test.com")
+    with pytest.raises(ValueError, match="not a refresh token"):
+        issuer.verify_refresh(token)
+
+
+def test_verify_refresh_rejects_expired(issuer, settings):
+    import time
+
+    from jose import ExpiredSignatureError
+
+    now = int(time.time())
+    token = issuer.sign(
+        {
+            "sub": "s1",
+            "iss": settings.issuer,
+            "aud": settings.audience,
+            "iat": now - 120,
+            "exp": now - 60,
+            "type": "refresh",
+        }
+    )
+    with pytest.raises(ExpiredSignatureError):
+        issuer.verify_refresh(token)
+
+
+def test_refresh_token_without_role_has_no_role_claim(issuer, settings):
+    claims = _decode(issuer, settings, issuer.issue_refresh_token("user@test.com"))
+    assert "role" not in claims
+
+
+def test_ephemeral_mints_are_not_audited():
+    settings = ServerAuthSettings(access_token_expire_minutes=1, mint_audit_min_ttl_seconds=300)
+    audit = InMemoryMintAuditStore()
+    TokenIssuer(settings, audit).issue_access_token("user@test.com")
+    assert audit.list_recent() == []
+
+
+def test_long_lived_mints_are_audited():
+    settings = ServerAuthSettings(access_token_expire_minutes=60, mint_audit_min_ttl_seconds=300)
+    audit = InMemoryMintAuditStore()
+    TokenIssuer(settings, audit).issue_access_token("user@test.com", role="admin")
+    entry = audit.list_recent()[0]
+    assert entry["sub"] == "user@test.com"
+    assert entry["role"] == "admin"
+    assert entry["kind"] == "access"
+
+
+def test_audit_failure_never_blocks_mint(settings, caplog):
+    class BrokenAudit:
+        def append(self, entry):
+            raise OSError("disk on fire")
+
+        def list_recent(self, limit=200):
+            return []
+
+    issuer = TokenIssuer(settings, BrokenAudit())
+    with caplog.at_level("WARNING"):
+        token = issuer.issue_access_token("user@test.com")
+    assert isinstance(token, str)
+    assert "mint audit append failed" in caplog.text
+
+
+def test_mldsa_algorithm_skips_rsa_keygen():
+    issuer = TokenIssuer(ServerAuthSettings(algorithm="ML-DSA-65"), InMemoryMintAuditStore())
+    assert issuer._private_key is None
+
+
+def test_unsupported_algorithm_raises():
+    with pytest.raises(ValueError, match="unsupported token algorithm"):
+        TokenIssuer(ServerAuthSettings(algorithm="HS256"), InMemoryMintAuditStore())
