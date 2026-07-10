@@ -63,3 +63,5 @@ This gives you:
 - [Wallet Auth Guide](user-guide/wallet-auth.md) — Full challenge/verify flow
 - [Embed in App](how-to/embed-in-app.md) — Embed alongside your controllers
 - [Configuration Reference](reference/config.md) — All settings
+
+**See it in context**: the [flagship use case](https://dperezcabrera.github.io/pico-boot/flagship/) wires this module into a full order platform together with the rest of the ecosystem.
