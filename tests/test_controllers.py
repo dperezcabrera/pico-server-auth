@@ -27,7 +27,7 @@ def container():
             }
         )
     )
-    return init(modules=["pico_server_auth"], config=config)
+    return init(modules=["pico_server_auth", "pico_fastapi", "pico_client_auth"], config=config)
 
 
 @pytest.fixture(scope="module")
@@ -199,9 +199,9 @@ def test_issued_token_is_valid_jwt(client):
     jwks = client.get("/api/v1/auth/jwks").json()
     key = jwks["keys"][0]
 
-    from jose import jwt
+    import jwt
 
-    claims = jwt.decode(token, key, algorithms=["RS256"], audience="test", issuer="http://test")
+    claims = jwt.decode(token, jwt.PyJWK(key), algorithms=["RS256"], audience="test", issuer="http://test")
     assert claims["sub"] == "admin@test.com"
     # admin_role defaults to "operator" (configurable via server_auth.admin_role)
     assert claims["role"] == "operator"
@@ -232,9 +232,9 @@ def test_wallet_token_has_wallet_claims(client):
     jwks = client.get("/api/v1/auth/jwks").json()
     key = jwks["keys"][0]
 
-    from jose import jwt
+    import jwt
 
-    claims = jwt.decode(token, key, algorithms=["RS256"], audience="test", issuer="http://test")
+    claims = jwt.decode(token, jwt.PyJWK(key), algorithms=["RS256"], audience="test", issuer="http://test")
     assert claims["sub"] == addr
     assert claims["role"] == "wallet"
     assert claims["algorithm"] == "Ed25519"
@@ -268,10 +268,10 @@ def _login(client):
 
 
 def _decode(client, token):
-    from jose import jwt
+    import jwt
 
     key = client.get("/api/v1/auth/jwks").json()["keys"][0]
-    return jwt.decode(token, key, algorithms=["RS256"], audience="test", issuer="http://test")
+    return jwt.decode(token, jwt.PyJWK(key), algorithms=["RS256"], audience="test", issuer="http://test")
 
 
 def test_refresh_rotates_tokens_and_preserves_role(client):

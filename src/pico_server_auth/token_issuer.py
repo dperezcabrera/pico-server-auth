@@ -91,7 +91,7 @@ class TokenIssuer:
             raise ValueError(f"unsupported token algorithm: {alg}")
 
     def issue_access_token(self, subject: str, role: str = "user", extra_claims: dict | None = None) -> str:
-        from jose import jwt
+        import jwt
 
         now = int(time.time())
         payload = {
@@ -125,7 +125,7 @@ class TokenIssuer:
         We DO inject a fresh ``jti`` if the caller didn't supply
         one, so every token in the system carries a unique ID and
         becomes individually revocable via the denylist."""
-        from jose import jwt
+        import jwt
 
         if "jti" not in payload:
             payload = {**payload, "jti": _new_jti()}
@@ -149,10 +149,10 @@ class TokenIssuer:
         Validates signature, issuer, audience and expiry. Also
         enforces that the token's ``type`` claim is ``refresh`` so
         a stolen access token can't be exchanged at the refresh
-        endpoint. Raises ``jose.JWTError`` /
+        endpoint. Raises ``jwt.PyJWTError`` /
         ``ExpiredSignatureError`` on failure — caller maps to 401.
         """
-        from jose import jwt
+        import jwt
 
         pub_pem = self._public_key.public_bytes(
             encoding=serialization.Encoding.PEM,
@@ -170,7 +170,7 @@ class TokenIssuer:
         return payload
 
     def issue_refresh_token(self, subject: str, role: str | None = None) -> str:
-        from jose import jwt
+        import jwt
 
         now = int(time.time())
         payload = {
