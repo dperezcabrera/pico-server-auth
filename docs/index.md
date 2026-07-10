@@ -17,15 +17,17 @@ pip install pico-server-auth
 Run pico-server-auth inside your pico-boot application alongside your own controllers:
 
 ```python
-from pico_boot import Application
+from fastapi import FastAPI
+from pico_boot import init
+from pico_ioc import DictSource, configuration
 
-app = Application(
-    module_names=[
+container = init(
+    modules=[
         "pico_server_auth",   # Auth server endpoints
         "pico_client_auth",   # JWT validation middleware
         "my_app",             # Your controllers
     ],
-    config={
+    config=configuration(DictSource({
         "server_auth": {
             "issuer": "http://localhost:8100",
             "audience": "my-app",
@@ -36,8 +38,9 @@ app = Application(
             "audience": "my-app",
             "jwks_url": "http://localhost:8100/api/v1/auth/jwks",
         },
-    },
+    })),
 )
+app = container.get(FastAPI)
 
 app.run()
 ```

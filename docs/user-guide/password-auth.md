@@ -10,11 +10,13 @@ Password authentication provides a simple email/password login for admin bootstr
 Set `auto_create_admin: true` in `ServerAuthSettings`:
 
 ```python
-from pico_boot import Application
+from fastapi import FastAPI
+from pico_boot import init
+from pico_ioc import DictSource, configuration
 
-app = Application(
-    module_names=["pico_server_auth"],
-    config={
+container = init(
+    modules=["pico_server_auth"],
+    config=configuration(DictSource({
         "server_auth": {
             "auto_create_admin": True,
             "admin_email": "admin@example.com",
@@ -22,8 +24,9 @@ app = Application(
             "issuer": "http://localhost:8100",
             "audience": "my-app",
         },
-    },
+    })),
 )
+app = container.get(FastAPI)
 ```
 
 ## Login Request

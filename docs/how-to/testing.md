@@ -18,14 +18,16 @@ Use httpx `AsyncClient` with `ASGITransport` to test the full auth flow without 
 ```python
 import pytest
 from httpx import ASGITransport, AsyncClient
-from pico_boot import Application
+from fastapi import FastAPI
+from pico_boot import init
+from pico_ioc import DictSource, configuration
 
 
 @pytest.fixture
 def app():
-    return Application(
-        module_names=["pico_server_auth", "pico_client_auth", "my_app"],
-        config={
+    container = init(
+        modules=["pico_server_auth", "pico_client_auth", "my_app"],
+        config=configuration(DictSource({
             "server_auth": {
                 "issuer": "http://testserver",
                 "audience": "test",
@@ -39,13 +41,14 @@ def app():
                 "audience": "test",
                 "jwks_url": "http://testserver/api/v1/auth/jwks",
             },
-        },
+        })),
     )
+    return container.get(FastAPI)
 
 
 @pytest.fixture
 async def client(app):
-    transport = ASGITransport(app=app.fastapi_app)
+    transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as c:
         yield c
 

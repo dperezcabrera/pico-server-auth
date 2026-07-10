@@ -43,11 +43,13 @@ class ServerAuthSettings:
 Pass settings as a nested dict under the `server_auth` key:
 
 ```python
-from pico_boot import Application
+from fastapi import FastAPI
+from pico_boot import init
+from pico_ioc import DictSource, configuration
 
-app = Application(
-    module_names=["pico_server_auth"],
-    config={
+container = init(
+    modules=["pico_server_auth"],
+    config=configuration(DictSource({
         "server_auth": {
             "issuer": "https://auth.example.com",
             "audience": "my-platform",
@@ -57,8 +59,9 @@ app = Application(
             "auto_create_admin": False,
             "supported_wallet_algorithms": ["ML-DSA-65", "Ed25519"],
         },
-    },
+    })),
 )
+app = container.get(FastAPI)
 ```
 
 ## Important Notes

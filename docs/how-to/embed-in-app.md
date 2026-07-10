@@ -7,15 +7,17 @@ Run pico-server-auth inside your pico-boot application so auth endpoints and you
 Include both `pico_server_auth` and `pico_client_auth` in your module list. Match the `issuer` and `audience` settings between them.
 
 ```python
-from pico_boot import Application
+from fastapi import FastAPI
+from pico_boot import init
+from pico_ioc import DictSource, configuration
 
-app = Application(
-    module_names=[
+container = init(
+    modules=[
         "pico_server_auth",   # /auth/* endpoints (issue tokens)
         "pico_client_auth",   # JWT validation middleware (validate tokens)
         "my_app",             # Your controllers
     ],
-    config={
+    config=configuration(DictSource({
         "server_auth": {
             "issuer": "http://localhost:8100",
             "audience": "my-app",
@@ -29,8 +31,9 @@ app = Application(
             "audience": "my-app",
             "jwks_url": "http://localhost:8100/api/v1/auth/jwks",
         },
-    },
+    })),
 )
+app = container.get(FastAPI)
 
 app.run()
 ```
