@@ -5,6 +5,12 @@ All notable changes to pico-server-auth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-07-10
+
+### Changed
+
+- JWT backend migrated from python-jose (unmaintained: no release in 14 months) to PyJWT (`PyJWT[crypto] >= 2.8`). Token format, claims and JWKS are unchanged — tokens issued before the migration keep validating. Exception mapping: `jose.JWTError` -> `jwt.PyJWTError`.
+
 ## [0.1.2] - 2026-06-07
 
 ### Added

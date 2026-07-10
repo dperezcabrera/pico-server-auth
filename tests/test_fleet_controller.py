@@ -1,7 +1,7 @@
+import jwt
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from jose import jwt
 from pico_boot import init
 from pico_ioc import DictSource, configuration
 
@@ -26,7 +26,7 @@ def _make_client(fleet_mint_secret: str) -> TestClient:
             }
         )
     )
-    container = init(modules=["pico_server_auth"], config=config)
+    container = init(modules=["pico_server_auth", "pico_fastapi", "pico_client_auth"], config=config)
     return TestClient(container.get(FastAPI))
 
 
@@ -42,7 +42,7 @@ def _mint(client, body, secret=SECRET):
 
 def _decode(client, token):
     key = client.get("/api/v1/auth/jwks").json()["keys"][0]
-    return jwt.decode(token, key, algorithms=["RS256"], audience="test", issuer="http://test")
+    return jwt.decode(token, jwt.PyJWK(key), algorithms=["RS256"], audience="test", issuer="http://test")
 
 
 def test_mint_session_returns_valid_token(client):

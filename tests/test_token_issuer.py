@@ -1,5 +1,5 @@
+import jwt
 import pytest
-from jose import jwt
 
 from pico_server_auth.config import ServerAuthSettings
 from pico_server_auth.mint_audit_store import InMemoryMintAuditStore
@@ -34,7 +34,7 @@ def test_access_token_claims(issuer, settings):
 
     claims = jwt.decode(
         token,
-        key,
+        jwt.PyJWK(key),
         algorithms=["RS256"],
         audience=settings.audience,
         issuer=settings.issuer,
@@ -58,7 +58,7 @@ def test_refresh_token_has_type_claim(issuer, settings):
     jwks = issuer.jwks()
     key = jwks["keys"][0]
 
-    claims = jwt.decode(token, key, algorithms=["RS256"], audience=settings.audience, issuer=settings.issuer)
+    claims = jwt.decode(token, jwt.PyJWK(key), algorithms=["RS256"], audience=settings.audience, issuer=settings.issuer)
     assert claims["type"] == "refresh"
     assert claims["sub"] == "user@test.com"
 
@@ -85,7 +85,7 @@ def test_jwks_is_stable(issuer):
 def _decode(issuer, settings, token):
     return jwt.decode(
         token,
-        issuer.jwks()["keys"][0],
+        jwt.PyJWK(issuer.jwks()["keys"][0]),
         algorithms=["RS256"],
         audience=settings.audience,
         issuer=settings.issuer,
@@ -134,7 +134,7 @@ def test_verify_refresh_rejects_access_token(issuer):
 def test_verify_refresh_rejects_expired(issuer, settings):
     import time
 
-    from jose import ExpiredSignatureError
+    from jwt import ExpiredSignatureError
 
     now = int(time.time())
     token = issuer.sign(

@@ -142,7 +142,7 @@ class AuthController:
         Body:    { "refresh_token": "..." }
         Returns: { "access_token": "...", "refresh_token": "..." }
         """
-        from jose import ExpiredSignatureError, JWTError
+        from jwt import ExpiredSignatureError, PyJWTError
 
         token = str(body.get("refresh_token", ""))
         if not token:
@@ -154,7 +154,7 @@ class AuthController:
             claims = self._issuer.verify_refresh(token)
         except ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="refresh expired")
-        except (JWTError, ValueError) as exc:
+        except (PyJWTError, ValueError) as exc:
             raise HTTPException(
                 status_code=401,
                 detail=f"refresh invalid: {exc}",
