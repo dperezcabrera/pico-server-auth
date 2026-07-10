@@ -7,7 +7,7 @@ from pico_ioc import DictSource, configuration
 
 
 @pytest.fixture(scope="module")
-def app():
+def container():
     config = configuration(
         DictSource(
             {
@@ -27,13 +27,12 @@ def app():
             }
         )
     )
-    container = init(modules=["pico_server_auth"], config=config)
-    return container.get(FastAPI)
+    return init(modules=["pico_server_auth"], config=config)
 
 
 @pytest.fixture(scope="module")
-def client(app):
-    return TestClient(app)
+def client(container):
+    return TestClient(container.get(FastAPI))
 
 
 # --- JWKS ---
@@ -240,3 +239,139 @@ def test_wallet_token_has_wallet_claims(client):
     assert claims["role"] == "wallet"
     assert claims["algorithm"] == "Ed25519"
     assert claims["wallet_address"] == addr
+
+
+def test_wallet_login_invalid_hex(client):
+    r = client.post("/api/v1/auth/challenge", json={"address": "0xhex"})
+    nonce = r.json()["challenge"]
+    r = client.post(
+        "/api/v1/auth/sign-in",
+        json={
+            "address": "0xhex",
+            "public_key": "not-hex",
+            "signature": "zz",
+            "challenge": nonce,
+            "algorithm": "Ed25519",
+        },
+    )
+    assert r.status_code == 400
+    assert "hex" in r.json()["detail"]
+
+
+# --- Refresh ---
+
+
+def _login(client):
+    r = client.post("/api/v1/auth/login", json={"email": "admin@test.com", "password": "secret"})
+    assert r.status_code == 200
+    return r.json()
+
+
+def _decode(client, token):
+    from jose import jwt
+
+    key = client.get("/api/v1/auth/jwks").json()["keys"][0]
+    return jwt.decode(token, key, algorithms=["RS256"], audience="test", issuer="http://test")
+
+
+def test_refresh_rotates_tokens_and_preserves_role(client):
+    tokens = _login(client)
+
+    r = client.post("/api/v1/auth/refresh", json={"refresh_token": tokens["refresh_token"]})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["refresh_token"] != tokens["refresh_token"]
+
+    access_claims = _decode(client, data["access_token"])
+    assert access_claims["sub"] == "admin@test.com"
+    assert access_claims["role"] == "operator"
+    refresh_claims = _decode(client, data["refresh_token"])
+    assert refresh_claims["type"] == "refresh"
+    assert refresh_claims["role"] == "operator"
+
+
+def test_refresh_requires_token(client):
+    assert client.post("/api/v1/auth/refresh", json={}).status_code == 400
+
+
+def test_refresh_rejects_garbage_token(client):
+    r = client.post("/api/v1/auth/refresh", json={"refresh_token": "not.a.jwt"})
+    assert r.status_code == 401
+
+
+def test_refresh_rejects_access_token(client):
+    tokens = _login(client)
+    r = client.post("/api/v1/auth/refresh", json={"refresh_token": tokens["access_token"]})
+    assert r.status_code == 401
+    assert "not a refresh token" in r.json()["detail"]
+
+
+def test_refresh_rejects_expired_token(client, container):
+    import time
+
+    from pico_server_auth.token_issuer import TokenIssuer
+
+    issuer = container.get(TokenIssuer)
+    now = int(time.time())
+    expired = issuer.sign(
+        {"sub": "s1", "iss": "http://test", "aud": "test", "iat": now - 120, "exp": now - 60, "type": "refresh"}
+    )
+    r = client.post("/api/v1/auth/refresh", json={"refresh_token": expired})
+    assert r.status_code == 401
+    assert r.json()["detail"] == "refresh expired"
+
+
+def test_refresh_rejects_token_without_sub(client, container):
+    import time
+
+    from pico_server_auth.token_issuer import TokenIssuer
+
+    issuer = container.get(TokenIssuer)
+    now = int(time.time())
+    token = issuer.sign({"iss": "http://test", "aud": "test", "iat": now, "exp": now + 60, "type": "refresh"})
+    r = client.post("/api/v1/auth/refresh", json={"refresh_token": token})
+    assert r.status_code == 401
+    assert r.json()["detail"] == "missing sub"
+
+
+# --- Revocation + mint audit ---
+
+
+def test_revoke_and_list(client):
+    r = client.post("/api/v1/auth/revoke", json={"jti": "jti-1", "reason": "stolen"})
+    assert r.status_code == 200
+    entry = r.json()["revoked"]
+    assert entry["jti"] == "jti-1"
+    assert entry["reason"] == "stolen"
+    # auth middleware disabled in tests -> actor falls back to "unknown"
+    assert entry["revoked_by"] == "unknown"
+
+    again = client.post("/api/v1/auth/revoke", json={"jti": "jti-1", "reason": "other"}).json()["revoked"]
+    assert again["reason"] == "stolen"
+
+    items = client.get("/api/v1/auth/revoked-jtis").json()["items"]
+    assert "jti-1" in [e["jti"] for e in items]
+
+
+def test_revoke_requires_jti(client):
+    assert client.post("/api/v1/auth/revoke", json={"jti": ""}).status_code == 400
+
+
+def test_mints_reflect_revocation_status(client):
+    tokens = _login(client)
+    jti = _decode(client, tokens["access_token"])["jti"]
+
+    items = client.get("/api/v1/auth/mints").json()["items"]
+    mine = next(e for e in items if e["jti"] == jti)
+    assert mine["revoked"] is False
+    assert mine["sub"] == "admin@test.com"
+
+    client.post("/api/v1/auth/revoke", json={"jti": jti})
+    items = client.get("/api/v1/auth/mints").json()["items"]
+    assert next(e for e in items if e["jti"] == jti)["revoked"] is True
+
+
+def test_mints_respects_limit(client):
+    _login(client)
+    _login(client)
+    assert len(client.get("/api/v1/auth/mints", params={"limit": 1}).json()["items"]) == 1
