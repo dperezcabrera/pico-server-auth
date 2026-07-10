@@ -5,11 +5,13 @@ Deploy pico-server-auth as a dedicated auth microservice. Other services validat
 ## Auth Service
 
 ```python
-from pico_boot import Application
+from fastapi import FastAPI
+from pico_boot import init
+from pico_ioc import DictSource, configuration
 
-auth_app = Application(
-    module_names=["pico_server_auth"],
-    config={
+auth_container = init(
+    modules=["pico_server_auth"],
+    config=configuration(DictSource({
         "server_auth": {
             "issuer": "https://auth.example.com",
             "audience": "my-platform",
@@ -17,8 +19,9 @@ auth_app = Application(
             "refresh_token_expire_days": 7,
             "challenge_ttl_seconds": 60,
         },
-    },
+    })),
 )
+app = container.get(FastAPI)
 
 auth_app.run()  # Runs on port 8100 (or configure via pico-boot)
 ```
@@ -28,21 +31,24 @@ auth_app.run()  # Runs on port 8100 (or configure via pico-boot)
 Each downstream service runs pico-client-auth pointing at the auth service's JWKS URL:
 
 ```python
-from pico_boot import Application
+from fastapi import FastAPI
+from pico_boot import init
+from pico_ioc import DictSource, configuration
 
-api_app = Application(
-    module_names=[
+api_container = init(
+    modules=[
         "pico_client_auth",
         "my_api",
     ],
-    config={
+    config=configuration(DictSource({
         "auth_client": {
             "issuer": "https://auth.example.com",
             "audience": "my-platform",
             "jwks_url": "https://auth.example.com/api/v1/auth/jwks",
         },
-    },
+    })),
 )
+app = container.get(FastAPI)
 
 api_app.run()
 ```

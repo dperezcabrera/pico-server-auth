@@ -31,15 +31,17 @@ This installs pico-server-auth along with its dependencies: `pico-ioc`, `pico-fa
 The most common setup: embed pico-server-auth in your pico-boot application so auth endpoints and your business logic share the same process.
 
 ```python
-from pico_boot import Application
+from fastapi import FastAPI
+from pico_boot import init
+from pico_ioc import DictSource, configuration
 
-app = Application(
-    module_names=[
+container = init(
+    modules=[
         "pico_server_auth",   # Provides /auth/* endpoints
         "pico_client_auth",   # Validates JWTs on incoming requests
         "my_app",             # Your controllers
     ],
-    config={
+    config=configuration(DictSource({
         "server_auth": {
             "issuer": "http://localhost:8100",
             "audience": "my-app",
@@ -52,8 +54,9 @@ app = Application(
             "audience": "my-app",
             "jwks_url": "http://localhost:8100/api/v1/auth/jwks",
         },
-    },
+    })),
 )
+app = container.get(FastAPI)
 
 app.run()
 ```
@@ -66,17 +69,20 @@ app.run()
 Run pico-server-auth as a dedicated auth microservice:
 
 ```python
-from pico_boot import Application
+from fastapi import FastAPI
+from pico_boot import init
+from pico_ioc import DictSource, configuration
 
-app = Application(
-    module_names=["pico_server_auth"],
-    config={
+container = init(
+    modules=["pico_server_auth"],
+    config=configuration(DictSource({
         "server_auth": {
             "issuer": "https://auth.example.com",
             "audience": "my-platform",
         },
-    },
+    })),
 )
+app = container.get(FastAPI)
 
 app.run()
 ```
