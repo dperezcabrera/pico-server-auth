@@ -1,0 +1,30 @@
+# pico-server-auth
+
+> Embeddable auth server module for pico-boot — JWT issuance, wallet challenge/verify, password login, and JWKS endpoint
+
+## Docs
+
+- [Home](https://dperezcabrera.github.io/pico-server-auth/)
+- [Getting Started](https://dperezcabrera.github.io/pico-server-auth/getting-started/)
+- [index](https://dperezcabrera.github.io/pico-server-auth/user-guide/)
+- [Wallet Auth](https://dperezcabrera.github.io/pico-server-auth/user-guide/wallet-auth/)
+- [Password Auth](https://dperezcabrera.github.io/pico-server-auth/user-guide/password-auth/)
+- [JWKS](https://dperezcabrera.github.io/pico-server-auth/user-guide/jwks/)
+- [index](https://dperezcabrera.github.io/pico-server-auth/how-to/)
+- [Embed in App](https://dperezcabrera.github.io/pico-server-auth/how-to/embed-in-app/)
+- [Standalone](https://dperezcabrera.github.io/pico-server-auth/how-to/standalone/)
+- [Custom Challenge Store](https://dperezcabrera.github.io/pico-server-auth/how-to/custom-challenge-store/)
+- [Testing](https://dperezcabrera.github.io/pico-server-auth/how-to/testing/)
+- [index](https://dperezcabrera.github.io/pico-server-auth/reference/)
+- [Configuration](https://dperezcabrera.github.io/pico-server-auth/reference/config/)
+- [Endpoints](https://dperezcabrera.github.io/pico-server-auth/reference/endpoints/)
+- [Architecture](https://dperezcabrera.github.io/pico-server-auth/architecture/)
+- [FAQ](https://dperezcabrera.github.io/pico-server-auth/faq/)
+- [Changelog](https://dperezcabrera.github.io/pico-server-auth/CHANGELOG/)
+
+## For agents
+
+- [Full docs in one file](https://dperezcabrera.github.io/pico-server-auth/llms-full.txt)
+- [AGENTS.md (conventions and boundaries)](https://raw.githubusercontent.com/dperezcabrera/pico-server-auth/main/AGENTS.md)
+- [Flagship use case (whole ecosystem wired)](https://dperezcabrera.github.io/pico-boot/flagship/)
+- [PyPI](https://pypi.org/project/pico-server-auth/)
