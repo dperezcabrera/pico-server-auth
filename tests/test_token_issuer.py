@@ -188,9 +188,10 @@ def test_audit_failure_never_blocks_mint(settings, caplog):
     assert "mint audit append failed" in caplog.text
 
 
-def test_mldsa_algorithm_skips_rsa_keygen():
-    issuer = TokenIssuer(ServerAuthSettings(algorithm="ML-DSA-65"), InMemoryMintAuditStore())
-    assert issuer._private_key is None
+def test_mldsa_algorithm_fails_fast():
+    # issuing with ML-DSA is unimplemented; an issuer without keys must not boot
+    with pytest.raises(NotImplementedError, match="ML-DSA-65"):
+        TokenIssuer(ServerAuthSettings(algorithm="ML-DSA-65"), InMemoryMintAuditStore())
 
 
 def test_unsupported_algorithm_raises():
