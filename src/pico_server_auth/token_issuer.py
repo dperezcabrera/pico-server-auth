@@ -86,7 +86,13 @@ class TokenIssuer:
             self._private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
             self._public_key = self._private_key.public_key()
         elif alg in ("ML-DSA-65", "ML-DSA-87"):
-            pass  # TODO: post-quantum key generation
+            # Post-quantum ISSUING is not implemented (wallet VERIFICATION of
+            # ML-DSA signatures is, see WalletVerifier). Failing here beats
+            # booting an issuer without keys that breaks on first login.
+            raise NotImplementedError(
+                f"token issuing with {alg} is not implemented yet; use RS256 "
+                f"(ML-DSA wallet verification is supported independently)"
+            )
         else:
             raise ValueError(f"unsupported token algorithm: {alg}")
 

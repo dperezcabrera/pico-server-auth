@@ -5,6 +5,12 @@ All notable changes to pico-server-auth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-07-12
+
+### Fixed
+
+- **Configuring `algorithm: ML-DSA-65` or `ML-DSA-87` now fails fast at startup** with `NotImplementedError` and a clear message. Post-quantum token ISSUING was never implemented: the issuer silently booted with no keys and crashed with an opaque `AttributeError` on the first login or JWKS request. Wallet VERIFICATION of ML-DSA signatures is unaffected and keeps working.
+
 ## [0.2.0] - 2026-07-10
 
 ### Changed
