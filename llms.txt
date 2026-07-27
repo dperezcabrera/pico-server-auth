@@ -1,0 +1,32 @@
+# pico-server-auth
+
+> Embeddable auth server module for pico-boot — JWT issuance, wallet challenge/verify, password login, and JWKS endpoint
+
+Install: `pip install pico-server-auth`. Import surface: `from pico_server_auth import ...`.
+
+## Usage
+
+```python
+container = init(modules=["myapp"], config=config)
+# pico-server-auth endpoints are available automatically
+```
+
+## Public API
+
+- `class ChallengeStore(Protocol)` — Protocol for storing and validating auth challenges.
+- `class InMemoryChallengeStore` — In-memory challenge store with TTL-based expiry.
+- `class ServerAuthSettings` — Configuration for pico-server-auth.
+- `class TokenIssuer` — Issues JWT tokens compatible with pico-client-auth validation.
+- `class WalletVerifier` — Verifies wallet signatures for challenge-response auth.
+
+## Docs
+
+- docs/CHANGELOG.md
+- docs/architecture.md
+- docs/faq.md
+- docs/getting-started.md
+- docs/how-to/ (5 pages)
+- docs/reference/ (3 pages)
+- docs/skills.md
+- docs/troubleshooting.md
+- docs/user-guide/ (4 pages)
