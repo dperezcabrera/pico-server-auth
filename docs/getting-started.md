@@ -12,7 +12,7 @@
 pip install pico-server-auth
 ```
 
-This installs pico-server-auth along with its dependencies: `pico-ioc`, `pico-fastapi`, `pico-client-auth`, `cryptography`, and `python-jose`.
+This installs pico-server-auth along with its dependencies: `pico-ioc`, `pico-fastapi`, `pico-client-auth`, `cryptography`, and `PyJWT[crypto]`.
 
 ## Key Concepts
 
