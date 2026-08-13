@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Python 3.11+
+- Python 3.11+ (tested on 3.11, 3.12, 3.13 and 3.14)
 - [pico-boot](https://github.com/dperezcabrera/pico-boot) for application bootstrapping
 - [pico-client-auth](https://github.com/dperezcabrera/pico-client-auth) for JWT validation middleware
 
