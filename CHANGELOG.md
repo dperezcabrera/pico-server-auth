@@ -5,6 +5,14 @@ All notable changes to pico-server-auth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `__all__` declares the public API and `tests/test_exports.py` pins it, per the ecosystem stability policy (ADR-014 in pico-ioc).
+
+### Documentation
+- `docs/architecture.md` links the ADR-014 stability and deprecation policy.
+
 ## [0.2.1] - 2026-07-12
 
 ### Fixed
