@@ -13,3 +13,11 @@ from .challenge_store import InMemoryChallengeStore as InMemoryChallengeStore
 from .config import ServerAuthSettings as ServerAuthSettings
 from .token_issuer import TokenIssuer as TokenIssuer
 from .wallet_verifier import WalletVerifier as WalletVerifier
+
+__all__ = [
+    "ChallengeStore",
+    "InMemoryChallengeStore",
+    "ServerAuthSettings",
+    "TokenIssuer",
+    "WalletVerifier",
+]
