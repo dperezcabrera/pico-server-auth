@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-29
+
 ### Fixed
 
 - Dependency floors raised to what the test suite proves: `pico-ioc >= 2.3.3`, `pico-boot >= 0.1.1` (0.1.0 was never on PyPI), `pico-fastapi >= 0.3.1`, `pico-client-auth >= 0.4.3`, `PyJWT >= 2.9.0` and `pydantic >= 2.0.2` (2.0.0 does not resolve with current FastAPI). A new CI job runs the suite with every declared floor pinned, so a floor that installs but does not work can no longer ship.
