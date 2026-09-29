@@ -125,7 +125,7 @@ The default `InMemoryChallengeStore` stores challenges in a dict with timestamps
 
 ```
 pico-server-auth
-  +-- pico-ioc >= 2.2.0        (DI container, @component, @configured)
+  +-- pico-ioc >= 2.3.3        (DI container, @component, @configured)
   +-- pico-fastapi              (@controller, @get, @post)
   +-- pico-client-auth          (@allow_anonymous decorator)
   +-- cryptography              (RSA keys, ML-DSA-65, Ed25519, secp256k1)
