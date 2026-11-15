@@ -1,4 +1,4 @@
-VERSIONS = 3.11 3.12 3.13 3.14
+VERSIONS = 3.11 3.12 3.13 3.14 3.15
 
 build-%:
 	docker build --build-arg PYTHON_VERSION=$* -t pico-server-auth-test:$* -f Dockerfile.test .
